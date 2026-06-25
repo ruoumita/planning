@@ -1,0 +1,14 @@
+# Bảo mật — KHÔNG push lên GitHub (chứa mật khẩu DB / secrets)
+config.json
+.env
+.streamlit/secrets.toml
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
