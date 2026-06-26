@@ -16,6 +16,7 @@ from utils.database import get_engine
 _SESSION_FILE = Path(__file__).parent.parent / ".sessions.json"
 _COOKIE_NAME = "mml_session"
 _MAX_AGE_SEC = 30 * 24 * 3600  # 30 ngày
+_SESSIONS: Dict[str, dict] = {}
 
 
 # ────────────────────────────────────────────────────────────

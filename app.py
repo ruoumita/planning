@@ -57,16 +57,26 @@ section[data-testid="stSidebar"] > div:first-child {
 [data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
     background:#2A3444 !important; color:#38BDF8 !important;
     border-left:3px solid #38BDF8 !important; font-weight:600 !important; }
-[data-testid="stSidebar"] .stButton > button {
-        font-size:.79rem !important; font-weight:900 !important; border-radius:4px !important;
-        width:100% !important; background:rgba(255,255,255,0.10) !important;
-        color:#FFFFFF !important; border:1px solid rgba(255,255,255,0.24) !important;
-        transition:all .12s !important; }
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background:rgba(255,255,255,0.18) !important; color:#FFFFFF !important; }
-    [data-testid="stSidebar"] .stButton > button span,
-    [data-testid="stSidebar"] .stButton > button {
-        font-weight:900 !important; color:#FFFFFF !important; }
+[data-testid="stSidebar"] .stButton > button{
+    width:100% !important;
+    font-size:.79rem !important;
+    font-weight:700 !important;
+    border-radius:4px !important;
+    background:rgba(255,255,255,.10) !important;
+    color:#FFFFFF !important;
+    border:1px solid rgba(255,255,255,.24) !important;
+}
+
+[data-testid="stSidebar"] .stButton > button p,
+[data-testid="stSidebar"] .stButton > button span{
+    color:#FFFFFF !important;
+    font-weight:700 !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover{
+    background:rgba(255,255,255,.18) !important;
+    color:#FFFFFF !important;
+}
 </style>""", unsafe_allow_html=True)
 def _sidebar_header():
     logo_html = (
@@ -99,15 +109,15 @@ def _sidebar_nav(user: dict):
         unsafe_allow_html=True,
     )
     nav = [
-        ("pages/1_Dashboard.py",         "📊  Dashboard"),
-        ("pages/2_So_Sanh_Phien_Ban.py", "🔄  So sánh phiên bản"),
-        ("pages/3_KHSX_vs_FC_LE.py",     "📈  KHSX vs FC LE"),
-        ("pages/6_Lich_Su_Phien_Ban.py", "📋  Lịch sử & Xu hướng"),
+        ("pages/dashboard.py", "📊  Dashboard"),
+        ("pages/version_comparison.py", "🔄  Version Comparison"),
+        ("pages/forecast_vs_le.py", "📈  Forecast vs FC LE"),
+        ("pages/version_history.py", "📋  Version History"),
     ]
     if user["system_role"] in ("ADMIN", "MEMBER"):
-        nav.append(("pages/4_Upload.py", "📤  Upload FC & KHSX"))
-    nav.append(("pages/7_Master_Data.py", "📁  Upload Master Data"))
-    nav.append(("pages/5_Cai_Dat.py", "⚙️  Cài đặt"))
+        nav.append(("pages/data_upload.py", "📤  Data Upload"))
+    nav.append(("pages/master_data.py", "📁  Master Data"))
+    nav.append(("pages/settings.py", "⚙️  Settings"))
     for path, label in nav:
         st.sidebar.page_link(path, label=label)
 
@@ -160,138 +170,182 @@ def _sidebar_footer(user: dict):
 def _login_logo_html():
     if _LOGO_SRC:
         return (
-            f'<img src="{_LOGO_SRC}" style="width:152px;height:114px;border-radius:10px;'
+            f'<img src="{_LOGO_SRC}" style="width:239px;height:120px;border-radius:10px;'
             f'object-fit:contain;background:#FFFFFF;padding:10px;margin-bottom:1.1rem;'
             f'box-shadow:0 8px 32px rgba(0,0,0,0.4);" alt="MML">'
         )
     return (
-        '<div style="width:80px;height:60px;background:#0EA5E9;'
+        '<div style="width:120px;height:60px;background:#0EA5E9;'
         'border-radius:10px;display:inline-flex;align-items:center;justify-content:center;'
-        'font-size:36px;margin-bottom:1.1rem;box-shadow:0 8px 24px rgba(14,165,233,.4);">🏭</div>'
+        'font-size:40px;margin-bottom:1.1rem;box-shadow:0 8px 24px rgba(14,165,233,.4);">🏭</div>'
     )
 
 
 def _render_prelogin_css():
-    st.markdown("""<style>
-        section[data-testid="stSidebar"] { display:none !important; }
-        .stApp, .main .block-container {
-            background: #0B1120 !important;
-            min-height: 100vh !important;
-            padding: 3rem 1rem !important;
-            color: #E2E8F0 !important;
+    st.markdown("""
+    <style>
+        /* ===== Hide sidebar ===== */
+        section[data-testid="stSidebar"] {
+            display:none !important;
         }
-        .stApp .main { background: transparent !important; }
-        .stApp .stTextInput > div > div,
-        .stApp .stPasswordInput > div > div,
-        .stApp .stNumberInput > div > div,
-        .stApp .stSelectbox > div > div,
-        .stApp .stMultiSelectbox > div > div,
-        .stApp [data-baseweb="input"],
-        .stApp [data-baseweb="input"] > div,
-        .stApp [data-baseweb="select"],
-        .stApp [data-baseweb="select"] > div,
-        .stApp [data-baseweb="textarea"],
-        .stApp [data-baseweb="textarea"] > div,
-        .stApp .stForm,
-        .stApp form,
-        .stApp [data-baseweb="button"] > div {
-            background: rgba(15,23,42,0.94) !important;
-            border: 1px solid rgba(255,255,255,0.14) !important;
-            border-radius: 16px !important;
-            color: #F8FAFC !important;
-        }
-        .stApp [data-baseweb="input"] input,
-        .stApp .stTextInput input,
-        .stApp .stPasswordInput input,
-        .stApp .stNumberInput input,
-        .stApp [data-baseweb="select"] input,
-        .stApp [data-baseweb="textarea"] textarea,
-        .stApp [data-baseweb="multi-select"] input {
-            color: #F8FAFC !important;
-            background: transparent !important;
-        }
-        .stApp [data-baseweb="input"] input::placeholder,
-        .stApp .stTextInput input::placeholder,
-        .stApp .stPasswordInput input::placeholder,
-        .stApp .stNumberInput input::placeholder,
-        .stApp [data-baseweb="select"] input::placeholder,
-        .stApp [data-baseweb="textarea"] textarea::placeholder {
-            color: #94A3B8 !important;
-        }
-        .stApp [data-baseweb="select"] [data-value],
-        .stApp [data-baseweb="select"] span,
-        .stApp [data-baseweb="select"] div,
-        .stApp .stMultiSelectbox > div > div,
-        .stApp .stTextArea > div > div {
-            color: #F8FAFC !important;
-        }
-        .stApp label,
-        .stApp .stTextInput > label,
-        .stApp .stPasswordInput > label,
-        .stApp .stNumberInput > label,
-        .stApp .stSelectbox > label,
-        .stApp .stTextArea > label,
-        .stApp details > summary,
-        .stApp details > summary span,
-        .stApp details > summary div {
-            color: #F8FAFC !important;
-        }
-        .stApp details[open] > summary { background: rgba(255,255,255,0.06) !important; }
-        .stApp details > div,
-        .stApp [data-baseweb="expander"] .streamlit-expanderContent {
-            background: rgba(15,23,42,0.96) !important;
-            color: #F8FAFC !important;
-        }
-        .stApp [data-baseweb="expander"] > div:first-child {
-            background: rgba(15,23,42,0.96) !important;
-            border: 1px solid rgba(255,255,255,0.16) !important;
-            color: #F8FAFC !important;
-        }
-        .stApp [data-baseweb="expander"] summary,
-        .stApp [data-baseweb="expander"] div[role="button"],
-        .stApp .streamlit-expanderHeader {
-            color: #F8FAFC !important;
-        }
-        .stApp .stButton > button,
-        .stApp .stButton > button[kind="primary"] {
-            background: linear-gradient(90deg, #0EA5E9 0%, #38BDF8 100%) !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            font-weight: 700 !important;
-            font-size: .92rem !important;
-            letter-spacing: .35px !important;
-            box-shadow: 0 16px 32px rgba(14,165,233,.22) !important;
-            border-radius: 10px !important;
-            min-height: 46px !important;
-        }
-        .stApp .stButton > button:hover,
-        .stApp .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(90deg, #38BDF8 0%, #A5F3FC 100%) !important;
-            box-shadow: 0 20px 36px rgba(56,189,248,.28) !important;
-        }
-    </style>""", unsafe_allow_html=True)
 
+        /* ===== Background ===== */
+        .stApp,
+        .main .block-container{
+            background:linear-gradient(135deg,#0F172A 0%,#111827 100%) !important;
+            min-height:100vh !important;
+            padding:2.2rem 1rem 2rem !important;
+            color:#E2E8F0 !important;
+        }
+
+        .stApp .main{
+            background:transparent !important;
+        }
+
+        /* ==========================================================
+           LABELS / TEXT
+        ========================================================== */
+
+        .stApp label,
+        .stApp .stMarkdown,
+        .stApp .stMarkdown p,
+        .stApp .stExpander summary,
+        .stApp [data-testid="stExpander"] summary{
+            color:#F8FAFC !important;
+        }
+
+        .stApp .stExpander summary{
+            font-weight:700 !important;
+            font-size:.96rem !important;
+        }
+
+        /* ==========================================================
+           TEXT INPUT
+        ========================================================== */
+
+        .stApp .stTextInput > div > div,
+        .stApp .stPasswordInput > div > div{
+            background:#FFFFFF !important;
+            border:1px solid #CBD5E1 !important;
+            border-radius:10px !important;
+            box-shadow:none !important;
+        }
+
+        .stApp .stTextInput input,
+        .stApp .stPasswordInput input{
+            background:#FFFFFF !important;
+            color:#111827 !important;
+            caret-color:#111827 !important;
+        }
+
+        .stApp .stTextInput input::placeholder,
+        .stApp .stPasswordInput input::placeholder{
+            color:#94A3B8 !important;
+        }
+
+        .stApp .stTextInput > div > div:focus-within,
+        .stApp .stPasswordInput > div > div:focus-within{
+            border:1px solid #38BDF8 !important;
+            box-shadow:0 0 0 3px rgba(56,189,248,.18) !important;
+        }
+
+        /* ==========================================================
+           NUMBER INPUT (PORT)
+        ========================================================== */
+
+        .stApp .stNumberInput > div > div{
+            background:#FFFFFF !important;
+            border:1px solid #CBD5E1 !important;
+            border-radius:10px !important;
+        }
+
+        .stApp .stNumberInput input{
+            background:#FFFFFF !important;
+            color:#111827 !important;
+            caret-color:#111827 !important;
+        }
+
+        /* ==========================================================
+           BUTTON
+        ========================================================== */
+
+        .stApp .stButton > button{
+            background:#0284C7 !important;
+            color:#FFFFFF !important;
+            border:none !important;
+            font-weight:700 !important;
+            border-radius:10px !important;
+            min-height:46px !important;
+            transition:.2s;
+        }
+
+        .stApp .stButton > button:hover{
+            background:#38BDF8 !important;
+        }
+
+        /* ==========================================================
+           FORM / ALERT
+        ========================================================== */
+
+        .stApp .stAlert,
+        .stApp .stExpander,
+        .stApp .stForm{
+            background:rgba(15,23,42,.90) !important;
+            border:1px solid #334155 !important;
+            color:#E2E8F0 !important;
+        }
+
+        /* ==========================================================
+           SELECTBOX (Business Role)
+        ========================================================== */
+
+        .stApp .stSelectbox > div > div{
+            background:#FFFFFF !important;
+            border:1px solid #CBD5E1 !important;
+            border-radius:10px !important;
+        }
+
+        .stApp .stSelectbox div[data-baseweb="select"]{
+            background:#FFFFFF !important;
+            color:#111827 !important;
+        }
+
+        /* ==========================================================
+           INPUT LABELS
+        ========================================================== */
+
+        .stTextInput label,
+        .stPasswordInput label,
+        .stNumberInput label,
+        .stSelectbox label{
+            color:#F8FAFC !important;
+            font-weight:600 !important;
+        }
+
+    </style>
+    """, unsafe_allow_html=True)
 
 def _render_prelogin_branding():
     st.markdown(f"""
-        <div style="text-align:center;margin-bottom:1.75rem;">
+        <div style="text-align:center;margin-bottom:1rem;">
             {_login_logo_html()}
-            <div style="font-size:.62rem;font-weight:700;color:#F8FAFC;letter-spacing:2.5px;
-                        text-transform:uppercase;margin-bottom:.4rem;">FORECAST TO AVAILABLE SYSTEM</div>
-            <h1 style="color:#EF4444;font-size:2.2rem;font-weight:900;margin:0;
-                       letter-spacing:-.5px;line-height:1.05;text-transform:uppercase;">F2A SYSTEM</h1>
-            <p style="color:#F8FAFC;font-size:.72rem;margin-top:.45rem;letter-spacing:1.2px;
-                      text-transform:uppercase;opacity:.92;">Supply Chain Department &nbsp;·&nbsp; Masan MeatDeli</p>
+            <div style="font-size:3.2rem;font-weight:800;margin:.15rem 0 0;
+                       letter-spacing:-.4px;line-height:1.02;text-transform:uppercase;color:#EF4444;">
+                F2A SYSTEM
+            </div>
+            <div style="font-size:.82rem;font-weight:700;letter-spacing:1.2px;
+                        text-transform:uppercase;margin-top:.25rem;color:#CBD5E1;">
+                FORECAST TO AVAILABLE SYSTEM
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
 
 def _render_setup_banner():
     st.markdown("""
-        <div style="background:#111827;border:1px solid rgba(248,113,113,0.45);
-                    border-radius:16px;padding:1rem 1.1rem;margin-bottom:1rem;text-align:center;">
-            <span style="color:#F8FAFC;font-size:.88rem;font-weight:700;text-transform:uppercase;
-                          letter-spacing:.8px;">⚙️  Hệ thống chưa khởi tạo — hoàn thành thiết lập bên dưới</span>
+        <div style="margin-bottom:.9rem;text-align:center;">
+            <span style="color:#38BDF8;font-size:.86rem;font-weight:600;text-transform:uppercase;
+                          letter-spacing:.7px;">⚙️ Hệ thống chưa khởi tạo — hoàn thành thiết lập bên dưới</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -305,7 +359,7 @@ def _render_db_wizard(db_url, db_ready):
     with st.expander("**Bước 1 — Kết nối Database**", expanded=not db_url):
         c1, c2 = st.columns([3, 1])
         db_host = c1.text_input("Host", value="192.168.1.113", key="w_host")
-        db_port = c2.number_input("Port", value=3307, min_value=1, max_value=65535, step=1, key="w_port")
+        db_port = c2.text_input("Port", value="3307", key="w_port")
         c3, c4 = st.columns(2)
         db_user = c3.text_input("Username", value="planning_scd", key="w_user")
         db_pass = c4.text_input("Password", type="password", key="w_pass")
@@ -403,13 +457,11 @@ if not user:
 
         # ── LOGIN ──
         st.markdown("""
-        <div style="border:1px solid rgba(248,113,113,0.85);border-radius:16px;
-                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:#0F172A;
-                    box-shadow:0 32px 64px rgba(0,0,0,.45);">
-            <p style="color:#EF4444;font-size:.92rem;font-weight:900;text-transform:uppercase;
-                      letter-spacing:2px;text-align:center;margin:0 0 .75rem;text-shadow:0 1px 6px rgba(0,0,0,.35);">
-                ĐĂNG NHẬP HỆ THỐNG
-            </p>
+        <div style="margin-bottom:1rem;text-align:center;">
+            <div style="font-size:.95rem;font-weight:700;text-transform:uppercase;
+                      letter-spacing:1.2px;margin:0;color:#60A5FA;">
+                ĐĂNG NHẬP
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -443,15 +495,15 @@ if not user:
 # LOGGED IN — Navigation + Sidebar
 # ════════════════════════════════════════════════════════════
 _pages = [
-    st.Page("pages/1_Dashboard.py",         title="Dashboard",          icon="📊", default=True),
-    st.Page("pages/2_So_Sanh_Phien_Ban.py", title="So sánh phiên bản", icon="🔄"),
-    st.Page("pages/3_KHSX_vs_FC_LE.py",     title="KHSX vs FC LE",      icon="📈"),
-    st.Page("pages/6_Lich_Su_Phien_Ban.py", title="Lịch sử & Xu hướng", icon="📋"),
+    st.Page("pages/dashboard.py", title="Dashboard", icon="📊", default=True),
+    st.Page("pages/version_comparison.py", title="Version Comparison", icon="🔄"),
+    st.Page("pages/forecast_vs_le.py", title="Forecast vs FC LE", icon="📈"),
+    st.Page("pages/version_history.py", title="Version History", icon="📋"),
 ]
 if user["system_role"] in ("ADMIN", "MEMBER"):
-    _pages.append(st.Page("pages/4_Upload.py", title="Upload FC & KHSX", icon="📤"))
-_pages.append(st.Page("pages/7_Master_Data.py", title="Master Data",        icon="📁"))
-_pages.append(st.Page("pages/5_Cai_Dat.py",     title="Cài đặt hệ thống",  icon="⚙️"))
+    _pages.append(st.Page("pages/data_upload.py", title="Data Upload", icon="📤"))
+_pages.append(st.Page("pages/master_data.py", title="Master Data", icon="📁"))
+_pages.append(st.Page("pages/settings.py", title="Settings", icon="⚙️"))
 
 pg = st.navigation(_pages, position="hidden")
 
