@@ -375,9 +375,10 @@ def _render_setup_banner():
 
 
 def _render_db_wizard(db_url, db_ready):
-    setup_step = st.session_state.get("setup_step", 1)
-    if db_url and db_ready and setup_step >= 4:
+    # Skip wizard nếu database đã ready
+    if db_url and db_ready:
         return False
+    setup_step = st.session_state.get("setup_step", 1)
 
     _render_setup_banner()
 
