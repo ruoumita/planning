@@ -176,11 +176,18 @@ div[data-testid="stMetric"], div[data-testid="metric-container"] {{
     border-bottom:2px solid var(--brand) !important; }}
 
 /* ── Section h3/h4 ───────────────────────────────────────── */
-.main h3 {{ font-size:1.08rem !important; font-weight:700 !important; color:var(--text) !important;
-    margin:1.4rem 0 .6rem !important; letter-spacing:-.2px !important; }}
-.main h4 {{ font-size:.95rem !important; font-weight:700 !important; color:var(--text-dim) !important;
-    margin:1.1rem 0 .5rem !important; letter-spacing:.1px !important;
-    text-transform:uppercase; font-size:.75rem !important; letter-spacing:.8px !important; }}
+.stApp .main h3 {{ font-size:1.08rem !important; font-weight:700 !important;
+    color:var(--text) !important; margin:1.4rem 0 .6rem !important; letter-spacing:-.2px !important; }}
+.stApp .main h4 {{ font-size:.82rem !important; font-weight:700 !important;
+    color:var(--text) !important; margin:1.1rem 0 .5rem !important;
+    text-transform:uppercase; letter-spacing:.9px !important; }}
+
+/* ── General text color (dark mode fix) ──────────────────── */
+.stApp .main p {{ color: var(--text) !important; }}
+.stApp .main li {{ color: var(--text) !important; }}
+.stApp .main [data-testid="stMarkdownContainer"] * {{ color: var(--text); }}
+.stApp .main [data-testid="stMarkdownContainer"] code {{ color: var(--brand) !important; }}
+.stApp .main [data-testid="stCaptionContainer"] * {{ color: var(--text-faint) !important; }}
 
 /* ── Inline code ─────────────────────────────────────────── */
 code {{ background: var(--brand-soft) !important; color: var(--brand) !important;
@@ -188,76 +195,82 @@ code {{ background: var(--brand-soft) !important; color: var(--brand) !important
     padding: 1px 6px !important; font-size:.82em !important; }}
 
 /* ── Labels ──────────────────────────────────────────────── */
-.stTextInput label, .stSelectbox label, .stNumberInput label,
-.stPasswordInput label, .stTextArea label, .stFileUploader label {{
+.stApp .stTextInput label, .stApp .stSelectbox label, .stApp .stNumberInput label,
+.stApp .stPasswordInput label, .stApp .stTextArea label, .stApp .stFileUploader label {{
     color: var(--text-dim) !important; font-size:.8rem !important;
     font-weight:600 !important; letter-spacing:.15px !important; }}
 
 /* ── Inputs / textarea ───────────────────────────────────── */
-[data-baseweb="input"] {{
+.stApp [data-baseweb="input"] {{
     background: var(--surface-2) !important;
     border-color: var(--border-strong) !important; border-radius:9px !important; }}
-[data-baseweb="input"]:focus-within {{
+.stApp [data-baseweb="input"]:focus-within {{
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 2px rgba(91,141,239,.18) !important; }}
-[data-baseweb="input"] input {{ color: var(--text) !important; background:transparent !important; }}
-[data-baseweb="input"] input::placeholder {{ color: var(--text-faint) !important; }}
-[data-baseweb="textarea"] {{
+.stApp [data-baseweb="input"] input {{ color: var(--text) !important; background:transparent !important; }}
+.stApp [data-baseweb="input"] input::placeholder {{ color: var(--text-faint) !important; }}
+.stApp [data-baseweb="textarea"] {{
     background: var(--surface-2) !important; border-color: var(--border-strong) !important;
     border-radius:9px !important; }}
-[data-baseweb="textarea"] textarea {{ color: var(--text) !important; background:transparent !important; }}
+.stApp [data-baseweb="textarea"] textarea {{ color: var(--text) !important; background:transparent !important; }}
 
 /* ── Selectbox ───────────────────────────────────────────── */
-[data-baseweb="select"] > div:first-child {{
+.stApp [data-baseweb="select"] > div:first-child {{
     background: var(--surface-2) !important; border-color: var(--border-strong) !important;
     border-radius:9px !important; }}
-[data-baseweb="select"] [data-value], [data-baseweb="select"] span {{
+.stApp [data-baseweb="select"] [data-value], .stApp [data-baseweb="select"] span {{
     color: var(--text) !important; }}
-[data-baseweb="popover"] {{ background: var(--surface) !important;
+.stApp [data-baseweb="popover"] {{ background: var(--surface) !important;
     border: 1px solid var(--border) !important; box-shadow: var(--shadow) !important;
     border-radius:10px !important; }}
-[data-baseweb="menu"] {{ background: var(--surface) !important; border-radius:10px !important; }}
-[data-baseweb="option"] {{ background: var(--surface) !important; color: var(--text) !important; }}
-[data-baseweb="option"]:hover {{ background: var(--brand-soft) !important; color: var(--brand) !important; }}
+.stApp [data-baseweb="menu"] {{ background: var(--surface) !important; border-radius:10px !important; }}
+.stApp [data-baseweb="option"] {{ background: var(--surface) !important; color: var(--text) !important; }}
+.stApp [data-baseweb="option"]:hover {{ background: var(--brand-soft) !important; color: var(--brand) !important; }}
 
 /* ── File uploader ───────────────────────────────────────── */
-[data-testid="stFileUploader"] {{ border-radius:12px !important; }}
-[data-testid="stFileUploadDropzone"] {{
+.stApp [data-testid="stFileUploader"] {{ border-radius:12px !important; }}
+.stApp [data-testid="stFileUploadDropzone"],
+.stApp .stFileUploader > div > div,
+.stApp .stFileUploader section {{
     background: var(--surface-2) !important;
     border: 2px dashed var(--border-strong) !important;
     border-radius:12px !important; }}
-[data-testid="stFileUploadDropzone"]:hover {{
+.stApp [data-testid="stFileUploadDropzone"]:hover,
+.stApp .stFileUploader section:hover {{
     border-color: var(--brand) !important;
     background: var(--brand-soft) !important; }}
-[data-testid="stFileUploadDropzone"] p,
-[data-testid="stFileUploadDropzone"] small,
-[data-testid="stFileUploadDropzone"] span {{ color: var(--text-dim) !important; }}
-[data-testid="stFileUploadDropzone"] button {{
+.stApp [data-testid="stFileUploadDropzone"] p,
+.stApp [data-testid="stFileUploadDropzone"] small,
+.stApp [data-testid="stFileUploadDropzone"] span {{ color: var(--text-dim) !important; }}
+.stApp [data-testid="stFileUploadDropzone"] button {{
     background: var(--surface) !important; color: var(--brand) !important;
     border: 1px solid var(--border-strong) !important; border-radius:8px !important; }}
 
 /* ── Form container ──────────────────────────────────────── */
-[data-testid="stForm"] {{
+.stApp [data-testid="stForm"],
+.stApp .stForm {{
     background: var(--surface-2) !important;
     border: 1px solid var(--border) !important; border-radius:14px !important;
     padding: 1.2rem 1.4rem 1rem !important; }}
 
 /* ── Expander ────────────────────────────────────────────── */
-[data-testid="stExpander"] {{ border:1px solid var(--border) !important;
+.stApp [data-testid="stExpander"] {{ border:1px solid var(--border) !important;
     border-radius:12px !important; background: var(--surface) !important; overflow:hidden !important; }}
-[data-testid="stExpander"] summary {{
+.stApp [data-testid="stExpander"] summary {{
     color: var(--text) !important; font-weight:600 !important; font-size:.88rem !important; }}
-[data-testid="stExpander"] summary:hover {{ background: var(--brand-soft) !important; }}
+.stApp [data-testid="stExpander"] summary:hover {{ background: var(--brand-soft) !important; }}
+.stApp [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {{
+    color: var(--text) !important; }}
 
-/* ── DataFame ────────────────────────────────────────────── */
-[data-testid="stDataFrame"] {{ border:1px solid var(--border) !important; border-radius:12px !important;
-    overflow:hidden !important; box-shadow: var(--shadow) !important; }}
+/* ── DataFrame ───────────────────────────────────────────── */
+.stApp [data-testid="stDataFrame"] {{ border:1px solid var(--border) !important;
+    border-radius:12px !important; overflow:hidden !important; box-shadow: var(--shadow) !important; }}
 
 /* ── Uploaded file badge ─────────────────────────────────── */
-[data-testid="stFileUploaderFile"] {{
+.stApp [data-testid="stFileUploaderFile"] {{
     background: var(--surface) !important; border: 1px solid var(--border) !important;
     border-radius:8px !important; }}
-[data-testid="stFileUploaderFile"] span {{ color: var(--text) !important; }}
+.stApp [data-testid="stFileUploaderFile"] span {{ color: var(--text) !important; }}
 
 /* ── Divider ─────────────────────────────────────────────── */
 hr {{ border-color: var(--border) !important; margin:1.2rem 0 !important; }}
