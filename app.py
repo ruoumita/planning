@@ -198,11 +198,45 @@ if not user:
             border: 1px solid rgba(255,255,255,0.22) !important;
             border-radius: 10px !important;
         }
-        .stApp [data-baseweb="input"] input {
+        .stApp [data-baseweb="input"] input,
+        .stApp .stTextInput input,
+        .stApp .stPasswordInput input,
+        .stApp .stNumberInput input {
             color: #F8FAFC !important;
         }
-        .stApp [data-baseweb="input"] input::placeholder {
+        .stApp [data-baseweb="input"] input::placeholder,
+        .stApp .stTextInput input::placeholder,
+        .stApp .stPasswordInput input::placeholder,
+        .stApp .stNumberInput input::placeholder {
             color: #94A3B8 !important;
+        }
+        .stApp [data-baseweb="select"],
+        .stApp [data-baseweb="select"] > div,
+        .stApp [data-baseweb="select"] span,
+        .stApp .stSelectbox > div > div,
+        .stApp .stSelectbox > div > div > div {
+            background: rgba(255,255,255,0.10) !important;
+            border: 1px solid rgba(255,255,255,0.22) !important;
+            color: #F8FAFC !important;
+        }
+        .stApp label,
+        .stApp .stTextInput > label,
+        .stApp .stPasswordInput > label,
+        .stApp .stNumberInput > label,
+        .stApp .stSelectbox > label {
+            color: #CBD5E1 !important;
+        }
+        .stApp details > summary,
+        .stApp details > summary span,
+        .stApp details > summary div {
+            color: #E2E8F0 !important;
+        }
+        .stApp details[open] > summary {
+            background: rgba(255,255,255,0.06) !important;
+        }
+        .stApp details > div {
+            background: rgba(15,23,42,0.15) !important;
+            color: #E2E8F0 !important;
         }
         /* ── Login primary button: nổi bật trên nền tối ── */
         .stApp .stButton > button,
@@ -238,11 +272,11 @@ if not user:
         st.markdown(f"""
         <div style="text-align:center;margin-bottom:1.75rem;">
             {_login_logo}
-            <div style="font-size:.62rem;font-weight:700;color:#38BDF8;letter-spacing:2.5px;
+            <div style="font-size:.62rem;font-weight:700;color:#F97316;letter-spacing:2.5px;
                         text-transform:uppercase;margin-bottom:.4rem;">Forecast to Available System</div>
-            <h1 style="color:#F1F5F9;font-size:1.75rem;font-weight:800;margin:0;
-                       letter-spacing:-.5px;line-height:1.2;">F2A System</h1>
-            <p style="color:#475569;font-size:.68rem;margin-top:.45rem;letter-spacing:1.2px;
+            <h1 style="color:#F43F5E;font-size:1.95rem;font-weight:900;margin:0;
+                       letter-spacing:-.5px;line-height:1.1;">F2A System</h1>
+            <p style="color:#E2E8F0;font-size:.72rem;margin-top:.45rem;letter-spacing:1.2px;
                       text-transform:uppercase;">Supply Chain Department &nbsp;·&nbsp; Masan MeatDeli</p>
         </div>
         """, unsafe_allow_html=True)
@@ -250,11 +284,32 @@ if not user:
         # ── WIZARD ──
         if not db_url or not db_ready:
             st.markdown("""
-            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);
+            <div style="background:rgba(14,165,233,0.12);border:1px solid rgba(56,189,248,0.22);
                         border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;text-align:center;">
-                <span style="color:#FCD34D;font-size:.85rem;font-weight:600;">
+                <span style="color:#E0F2FE;font-size:.85rem;font-weight:600;">
                     ⚙️  Hệ thống chưa khởi tạo — hoàn thành thiết lập bên dưới</span>
             </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("""
+            <style>
+            .stApp [data-baseweb="expander"] > div:first-child {
+                background: rgba(15,23,42,0.12) !important;
+                border: 1px solid rgba(255,255,255,0.14) !important;
+                color: #E2E8F0 !important;
+                border-radius: 12px !important;
+            }
+            .stApp [data-baseweb="expander"] summary {
+                color: #E2E8F0 !important;
+            }
+            .stApp [data-baseweb="expander"] div[role="button"] {
+                color: #E2E8F0 !important;
+            }
+            .stApp [data-baseweb="expander"] .streamlit-expanderContent {
+                background: rgba(15,23,42,0.14) !important;
+                color: #E2E8F0 !important;
+            }
+            </style>
             """, unsafe_allow_html=True)
 
             with st.expander("**Bước 1 — Kết nối Database**", expanded=not db_url):
@@ -312,10 +367,10 @@ if not user:
 
         # ── LOGIN ──
         st.markdown("""
-        <div style="border:1px solid rgba(255,255,255,0.18);border-radius:14px;
-                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:rgba(15,23,42,.55);
-                    backdrop-filter:blur(18px);">
-            <p style="color:#E2E8F0;font-size:.72rem;font-weight:700;text-transform:uppercase;
+        <div style="border:1px solid rgba(248,113,113,0.35);border-radius:14px;
+                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:rgba(15,23,42,.65);
+                    backdrop-filter:blur(22px);box-shadow:0 24px 60px rgba(15,23,42,.35);">
+            <p style="color:#F87171;font-size:.78rem;font-weight:800;text-transform:uppercase;
                       letter-spacing:2px;text-align:center;margin:0 0 .75rem;">
                 ĐĂNG NHẬP HỆ THỐNG
             </p>
