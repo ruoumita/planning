@@ -9,12 +9,12 @@ from utils.database import (
     get_database_url, save_database_url, test_connection,
     create_all_tables, is_db_initialized, build_mysql_url,
 )
-from utils.auth import authenticate, create_initial_admin
-from utils.ui import inject_global_css
-from utils.session import (
+from utils.auth import (
+    authenticate, create_initial_admin,
     create_session, get_session, delete_session,
     write_session_cookie, clear_session_cookie, read_session_cookie,
 )
+from utils.ui import inject_global_css
 
 _LOGO_PATH = Path(__file__).parent / "logo MML.png"
 _LOGO_B64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode() if _LOGO_PATH.exists() else ""
@@ -157,37 +157,30 @@ def _sidebar_footer(user: dict):
     st.sidebar.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
 
 
-# ════════════════════════════════════════════════════════════
-# STATE — restore session từ cookie nếu chưa đăng nhập
-# ════════════════════════════════════════════════════════════
-if "user" not in st.session_state:
-    _ck_token = read_session_cookie()
-    if _ck_token:
-        _ck_user = get_session(_ck_token)
-        if _ck_user:
-            st.session_state["user"] = _ck_user
-            st.session_state["_session_token"] = _ck_token
+def _login_logo_html():
+    if _LOGO_SRC:
+        return (
+            f'<img src="{_LOGO_SRC}" style="width:152px;height:114px;border-radius:10px;'
+            f'object-fit:contain;background:#FFFFFF;padding:10px;margin-bottom:1.1rem;'
+            f'box-shadow:0 8px 32px rgba(0,0,0,0.4);" alt="MML">'
+        )
+    return (
+        '<div style="width:80px;height:60px;background:#0EA5E9;'
+        'border-radius:10px;display:inline-flex;align-items:center;justify-content:center;'
+        'font-size:36px;margin-bottom:1.1rem;box-shadow:0 8px 24px rgba(14,165,233,.4);">🏭</div>'
+    )
 
-user     = st.session_state.get("user")
-db_url   = get_database_url()
-db_ready = is_db_initialized() if db_url else False
 
-_BR_OPTIONS = ["DP", "SP", "DP+SP"]
-
-# ════════════════════════════════════════════════════════════
-# NOT LOGGED IN
-# ════════════════════════════════════════════════════════════
-if not user:
-    # Xóa cookie khi logout (phải render ở main area, không phải sidebar)
-    if st.session_state.pop("_do_logout", False):
-        clear_session_cookie()
+def _render_prelogin_css():
     st.markdown("""<style>
         section[data-testid="stSidebar"] { display:none !important; }
         .stApp, .main .block-container {
-            background: linear-gradient(160deg, #0F172A 0%, #1E293B 60%, #0F172A 100%) !important;
-            min-height: 100vh !important; padding: 3rem 1rem !important;
+            background: #0B1120 !important;
+            min-height: 100vh !important;
+            padding: 3rem 1rem !important;
+            color: #E2E8F0 !important;
         }
-        /* ── Login inputs: trắng rõ trên nền tối ── */
+        .stApp .main { background: transparent !important; }
         .stApp .stTextInput > div > div,
         .stApp .stPasswordInput > div > div,
         .stApp .stNumberInput > div > div,
@@ -199,10 +192,12 @@ if not user:
         .stApp [data-baseweb="select"] > div,
         .stApp [data-baseweb="textarea"],
         .stApp [data-baseweb="textarea"] > div,
+        .stApp .stForm,
+        .stApp form,
         .stApp [data-baseweb="button"] > div {
-            background: rgba(15,23,42,0.88) !important;
-            border: 1px solid rgba(255,255,255,0.18) !important;
-            border-radius: 12px !important;
+            background: rgba(15,23,42,0.94) !important;
+            border: 1px solid rgba(255,255,255,0.14) !important;
+            border-radius: 16px !important;
             color: #F8FAFC !important;
         }
         .stApp [data-baseweb="input"] input,
@@ -226,29 +221,37 @@ if not user:
         .stApp [data-baseweb="select"] [data-value],
         .stApp [data-baseweb="select"] span,
         .stApp [data-baseweb="select"] div,
-        .stApp .stMultiSelectbox > div > div {
+        .stApp .stMultiSelectbox > div > div,
+        .stApp .stTextArea > div > div {
             color: #F8FAFC !important;
         }
         .stApp label,
         .stApp .stTextInput > label,
         .stApp .stPasswordInput > label,
         .stApp .stNumberInput > label,
-        .stApp .stSelectbox > label {
-            color: #E2E8F0 !important;
-        }
+        .stApp .stSelectbox > label,
+        .stApp .stTextArea > label,
         .stApp details > summary,
         .stApp details > summary span,
         .stApp details > summary div {
-            color: #E2E8F0 !important;
+            color: #F8FAFC !important;
         }
-        .stApp details[open] > summary {
-            background: rgba(255,255,255,0.06) !important;
+        .stApp details[open] > summary { background: rgba(255,255,255,0.06) !important; }
+        .stApp details > div,
+        .stApp [data-baseweb="expander"] .streamlit-expanderContent {
+            background: rgba(15,23,42,0.96) !important;
+            color: #F8FAFC !important;
         }
-        .stApp details > div {
-            background: rgba(15,23,42,0.15) !important;
-            color: #E2E8F0 !important;
+        .stApp [data-baseweb="expander"] > div:first-child {
+            background: rgba(15,23,42,0.96) !important;
+            border: 1px solid rgba(255,255,255,0.16) !important;
+            color: #F8FAFC !important;
         }
-        /* ── Login primary button: nổi bật trên nền tối ── */
+        .stApp [data-baseweb="expander"] summary,
+        .stApp [data-baseweb="expander"] div[role="button"],
+        .stApp .streamlit-expanderHeader {
+            color: #F8FAFC !important;
+        }
         .stApp .stButton > button,
         .stApp .stButton > button[kind="primary"] {
             background: linear-gradient(90deg, #0EA5E9 0%, #38BDF8 100%) !important;
@@ -268,6 +271,119 @@ if not user:
         }
     </style>""", unsafe_allow_html=True)
 
+
+def _render_prelogin_branding():
+    st.markdown(f"""
+        <div style="text-align:center;margin-bottom:1.75rem;">
+            {_login_logo_html()}
+            <div style="font-size:.62rem;font-weight:700;color:#F8FAFC;letter-spacing:2.5px;
+                        text-transform:uppercase;margin-bottom:.4rem;">FORECAST TO AVAILABLE SYSTEM</div>
+            <h1 style="color:#EF4444;font-size:2.2rem;font-weight:900;margin:0;
+                       letter-spacing:-.5px;line-height:1.05;text-transform:uppercase;">F2A SYSTEM</h1>
+            <p style="color:#F8FAFC;font-size:.72rem;margin-top:.45rem;letter-spacing:1.2px;
+                      text-transform:uppercase;opacity:.92;">Supply Chain Department &nbsp;·&nbsp; Masan MeatDeli</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+def _render_setup_banner():
+    st.markdown("""
+        <div style="background:#111827;border:1px solid rgba(248,113,113,0.45);
+                    border-radius:16px;padding:1rem 1.1rem;margin-bottom:1rem;text-align:center;">
+            <span style="color:#F8FAFC;font-size:.88rem;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.8px;">⚙️  Hệ thống chưa khởi tạo — hoàn thành thiết lập bên dưới</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+def _render_db_wizard(db_url, db_ready):
+    if db_url and db_ready:
+        return False
+
+    _render_setup_banner()
+
+    with st.expander("**Bước 1 — Kết nối Database**", expanded=not db_url):
+        c1, c2 = st.columns([3, 1])
+        db_host = c1.text_input("Host", value="192.168.1.113", key="w_host")
+        db_port = c2.number_input("Port", value=3307, min_value=1, max_value=65535, step=1, key="w_port")
+        c3, c4 = st.columns(2)
+        db_user = c3.text_input("Username", value="planning_scd", key="w_user")
+        db_pass = c4.text_input("Password", type="password", key="w_pass")
+        db_name = st.text_input("Database name", value="planningmml", key="w_db")
+
+        if st.button("🔌  Kiểm tra & lưu kết nối", type="primary", use_container_width=True, key="w_test"):
+            if not all([db_host, db_user, db_pass, db_name]):
+                st.warning("Điền đầy đủ thông tin.")
+            else:
+                new_url = build_mysql_url(db_host, int(db_port), db_name, db_user, db_pass)
+                ok, msg = test_connection(new_url)
+                if ok:
+                    save_database_url(new_url)
+                    st.success(msg + " — Đã lưu!")
+                    st.rerun()
+                else:
+                    st.error(msg)
+
+    if db_url:
+        with st.expander("**Bước 2 — Tạo bảng Database**", expanded=not db_ready):
+            st.info("Tạo toàn bộ bảng nghiệp vụ (idempotent — an toàn khi chạy lại).")
+            if st.button("🗄️  Tạo tất cả bảng", type="primary", use_container_width=True, key="w_create"):
+                with st.spinner("Đang tạo bảng..."):
+                    ok, msg = create_all_tables()
+                st.success(msg) if ok else st.error(msg)
+                if ok:
+                    st.rerun()
+
+    if db_ready:
+        with st.expander("**Bước 3 — Tạo tài khoản Admin đầu tiên**", expanded=True):
+            with st.form("setup_admin_form"):
+                a_email = st.text_input("Email Admin *")
+                a_name  = st.text_input("Họ tên")
+                a_br    = st.selectbox("Business Role", _BR_OPTIONS)
+                a_pw    = st.text_input("Mật khẩu *", type="password")
+                a_pw2   = st.text_input("Xác nhận mật khẩu", type="password")
+                if st.form_submit_button("✅  Hoàn tất thiết lập", type="primary", use_container_width=True):
+                    if not a_email or not a_pw:
+                        st.error("Email và mật khẩu là bắt buộc.")
+                    elif a_pw != a_pw2:
+                        st.error("Mật khẩu xác nhận không khớp.")
+                    else:
+                        ok, msg = create_initial_admin(a_email.strip().lower(), a_name, a_pw, a_br)
+                        if ok:
+                            st.success("✅  Hệ thống sẵn sàng — vui lòng đăng nhập.")
+                            st.rerun()
+                        else:
+                            st.error(msg)
+
+    return True
+
+
+# ════════════════════════════════════════════════════════════
+# STATE — restore session từ cookie nếu chưa đăng nhập
+# ════════════════════════════════════════════════════
+if "user" not in st.session_state:
+    _ck_token = read_session_cookie()
+    if _ck_token:
+        _ck_user = get_session(_ck_token)
+        if _ck_user:
+            st.session_state["user"] = _ck_user
+            st.session_state["_session_token"] = _ck_token
+
+user     = st.session_state.get("user")
+db_url   = get_database_url()
+db_ready = is_db_initialized() if db_url else False
+
+_BR_OPTIONS = ["DP", "SP", "DP+SP"]
+
+# ════════════════════════════════════════════════════════════
+# NOT LOGGED IN
+# ════════════════════════════════════════════════════════════
+if not user:
+    # Xóa cookie khi logout (phải render ở main area, không phải sidebar)
+    if st.session_state.pop("_do_logout", False):
+        clear_session_cookie()
+    _render_prelogin_css()
+
     _, center, _ = st.columns([1, 1.2, 1])
     with center:
         _login_logo = (
@@ -279,109 +395,19 @@ if not user:
             'border-radius:10px;display:inline-flex;align-items:center;justify-content:center;'
             'font-size:36px;margin-bottom:1.1rem;box-shadow:0 8px 24px rgba(14,165,233,.4);">🏭</div>'
         )
-        st.markdown(f"""
-        <div style="text-align:center;margin-bottom:1.75rem;">
-            {_login_logo}
-            <div style="font-size:.62rem;font-weight:700;color:#38BDF8;letter-spacing:2.5px;
-                        text-transform:uppercase;margin-bottom:.4rem;">Forecast to Available System</div>
-            <h1 style="color:#EF4444;font-size:1.95rem;font-weight:900;margin:0;
-                       letter-spacing:-.5px;line-height:1.1;">F2A System</h1>
-            <p style="color:#38BDF8;font-size:.72rem;margin-top:.45rem;letter-spacing:1.2px;
-                      text-transform:uppercase;">Supply Chain Department &nbsp;·&nbsp; Masan MeatDeli</p>
-        </div>
-        """, unsafe_allow_html=True)
+        _render_prelogin_branding()
 
         # ── WIZARD ──
-        if not db_url or not db_ready:
-            st.markdown("""
-            <div style="background:rgba(14,165,233,0.12);border:1px solid rgba(56,189,248,0.22);
-                        border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;text-align:center;">
-                <span style="color:#E0F2FE;font-size:.85rem;font-weight:600;">
-                    ⚙️  Hệ thống chưa khởi tạo — hoàn thành thiết lập bên dưới</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            st.markdown("""
-            <style>
-            .stApp [data-baseweb="expander"] > div:first-child {
-                background: rgba(15,23,42,0.22) !important;
-                border: 1px solid rgba(255,255,255,0.22) !important;
-                color: #E2E8F0 !important;
-                border-radius: 12px !important;
-            }
-            .stApp [data-baseweb="expander"] summary {
-                color: #E2E8F0 !important;
-            }
-            .stApp [data-baseweb="expander"] div[role="button"] {
-                color: #E2E8F0 !important;
-            }
-            .stApp [data-baseweb="expander"] .streamlit-expanderContent {
-                background: rgba(15,23,42,0.26) !important;
-                color: #E2E8F0 !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
-            with st.expander("**Bước 1 — Kết nối Database**", expanded=not db_url):
-                c1, c2 = st.columns([3, 1])
-                db_host = c1.text_input("Host", value="192.168.1.113", key="w_host")
-                db_port = c2.number_input("Port", value=3307, min_value=1, max_value=65535, step=1, key="w_port")
-                c3, c4 = st.columns(2)
-                db_user = c3.text_input("Username", value="planning_scd", key="w_user")
-                db_pass = c4.text_input("Password", type="password", key="w_pass")
-                db_name = st.text_input("Database name", value="planningmml", key="w_db")
-                if st.button("🔌  Kiểm tra & lưu kết nối", type="primary", use_container_width=True, key="w_test"):
-                    if not all([db_host, db_user, db_pass, db_name]):
-                        st.warning("Điền đầy đủ thông tin.")
-                    else:
-                        new_url = build_mysql_url(db_host, int(db_port), db_name, db_user, db_pass)
-                        ok, msg = test_connection(new_url)
-                        if ok:
-                            save_database_url(new_url)
-                            st.success(msg + " — Đã lưu!")
-                            st.rerun()
-                        else:
-                            st.error(msg)
-
-            if db_url:
-                with st.expander("**Bước 2 — Tạo bảng Database**", expanded=not db_ready):
-                    st.info("Tạo toàn bộ bảng nghiệp vụ (idempotent — an toàn khi chạy lại).")
-                    if st.button("🗄️  Tạo tất cả bảng", type="primary", use_container_width=True, key="w_create"):
-                        with st.spinner("Đang tạo bảng..."):
-                            ok, msg = create_all_tables()
-                        st.success(msg) if ok else st.error(msg)
-                        if ok:
-                            st.rerun()
-
-            if db_ready:
-                with st.expander("**Bước 3 — Tạo tài khoản Admin đầu tiên**", expanded=True):
-                    with st.form("setup_admin_form"):
-                        a_email = st.text_input("Email Admin *")
-                        a_name  = st.text_input("Họ tên")
-                        a_br    = st.selectbox("Business Role", _BR_OPTIONS)
-                        a_pw    = st.text_input("Mật khẩu *", type="password")
-                        a_pw2   = st.text_input("Xác nhận mật khẩu", type="password")
-                        if st.form_submit_button("✅  Hoàn tất thiết lập", type="primary", use_container_width=True):
-                            if not a_email or not a_pw:
-                                st.error("Email và mật khẩu là bắt buộc.")
-                            elif a_pw != a_pw2:
-                                st.error("Mật khẩu xác nhận không khớp.")
-                            else:
-                                ok, msg = create_initial_admin(a_email.strip().lower(), a_name, a_pw, a_br)
-                                if ok:
-                                    st.success("✅  Hệ thống sẵn sàng — vui lòng đăng nhập.")
-                                    st.rerun()
-                                else:
-                                    st.error(msg)
+        if _render_db_wizard(db_url, db_ready):
             st.stop()
 
         # ── LOGIN ──
         st.markdown("""
-        <div style="border:1px solid rgba(248,113,113,0.55);border-radius:16px;
-                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:rgba(15,23,42,0.85);
-                    backdrop-filter:blur(24px);box-shadow:0 28px 72px rgba(15,23,42,.45);">
-            <p style="color:#FECACA;font-size:.84rem;font-weight:900;text-transform:uppercase;
-                      letter-spacing:2px;text-align:center;margin:0 0 .75rem;text-shadow:0 1px 4px rgba(0,0,0,.35);">
+        <div style="border:1px solid rgba(248,113,113,0.85);border-radius:16px;
+                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:#0F172A;
+                    box-shadow:0 32px 64px rgba(0,0,0,.45);">
+            <p style="color:#EF4444;font-size:.92rem;font-weight:900;text-transform:uppercase;
+                      letter-spacing:2px;text-align:center;margin:0 0 .75rem;text-shadow:0 1px 6px rgba(0,0,0,.35);">
                 ĐĂNG NHẬP HỆ THỐNG
             </p>
         </div>
