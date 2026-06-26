@@ -1,5 +1,5 @@
 """
-Demand & Supply Planning System — Masan Meat Life
+F2A System (Forecast to Available System) — Masan MeatDeli
 Entry point: authentication, design-system CSS, sidebar, navigation.
 """
 import base64
@@ -21,8 +21,8 @@ _LOGO_B64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode() if _LOGO_PATH.exi
 _LOGO_SRC  = f"data:image/png;base64,{_LOGO_B64}" if _LOGO_B64 else ""
 
 st.set_page_config(
-    page_title="Demand & Supply Planning System",
-    page_icon="📦",
+    page_title="F2A System — Masan MeatDeli",
+    page_icon="🏭",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -85,9 +85,9 @@ def _sidebar_header():
             {logo_html}
             <div>
                 <div style="color:#E2E8F0;font-weight:700;font-size:.86rem;
-                            line-height:1.15;letter-spacing:-.1px;">Demand &amp; Supply</div>
+                            line-height:1.15;letter-spacing:-.1px;">F2A System</div>
                 <div style="color:#4A5E7A;font-size:.63rem;letter-spacing:1px;
-                            text-transform:uppercase;margin-top:2px;">Planning System</div>
+                            text-transform:uppercase;margin-top:2px;">Supply Chain · MeatDeli</div>
             </div>
         </div>
     </div>
@@ -186,29 +186,64 @@ if not user:
     st.markdown("""<style>
         section[data-testid="stSidebar"] { display:none !important; }
         .stApp, .main .block-container {
-            background: radial-gradient(1200px 600px at 50% -10%, #16294B 0%, #0B1528 55%, #070D1A 100%) !important;
+            background: linear-gradient(160deg, #0F172A 0%, #1E293B 60%, #0F172A 100%) !important;
             min-height: 100vh !important; padding: 3rem 1rem !important;
+        }
+        /* ── Login inputs: trắng rõ trên nền tối ── */
+        .stApp .stTextInput > div > div,
+        .stApp .stPasswordInput > div > div,
+        .stApp [data-baseweb="input"],
+        .stApp [data-baseweb="input"] > div {
+            background: rgba(255,255,255,0.10) !important;
+            border: 1px solid rgba(255,255,255,0.22) !important;
+            border-radius: 10px !important;
+        }
+        .stApp [data-baseweb="input"] input {
+            color: #F8FAFC !important;
+        }
+        .stApp [data-baseweb="input"] input::placeholder {
+            color: #94A3B8 !important;
+        }
+        /* ── Login primary button: nổi bật trên nền tối ── */
+        .stApp .stButton > button,
+        .stApp .stButton > button[kind="primary"] {
+            background: linear-gradient(90deg, #0EA5E9 0%, #38BDF8 100%) !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            font-weight: 700 !important;
+            font-size: .92rem !important;
+            letter-spacing: .35px !important;
+            box-shadow: 0 16px 32px rgba(14,165,233,.22) !important;
+            border-radius: 10px !important;
+            min-height: 46px !important;
+        }
+        .stApp .stButton > button:hover,
+        .stApp .stButton > button[kind="primary"]:hover {
+            background: linear-gradient(90deg, #38BDF8 0%, #A5F3FC 100%) !important;
+            box-shadow: 0 20px 36px rgba(56,189,248,.28) !important;
         }
     </style>""", unsafe_allow_html=True)
 
     _, center, _ = st.columns([1, 1.2, 1])
     with center:
         _login_logo = (
-            f'<img src="{_LOGO_SRC}" style="width:152px;height:114px;border-radius:18px;'
-            f'object-fit:contain;background:#FFFFFF;padding:10px;margin-bottom:1.2rem;'
-            f'box-shadow:0 16px 48px rgba(91,141,239,0.32);" alt="MML">'
+            f'<img src="{_LOGO_SRC}" style="width:152px;height:114px;border-radius:10px;'
+            f'object-fit:contain;background:#FFFFFF;padding:10px;margin-bottom:1.1rem;'
+            f'box-shadow:0 8px 32px rgba(0,0,0,0.4);" alt="MML">'
             if _LOGO_SRC else
-            '<div style="width:90px;height:90px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);'
-            'border-radius:22px;display:inline-flex;align-items:center;justify-content:center;'
-            'font-size:44px;margin-bottom:1.2rem;box-shadow:0 14px 36px rgba(29,78,216,0.5);">📦</div>'
+            '<div style="width:80px;height:60px;background:#0EA5E9;'
+            'border-radius:10px;display:inline-flex;align-items:center;justify-content:center;'
+            'font-size:36px;margin-bottom:1.1rem;box-shadow:0 8px 24px rgba(14,165,233,.4);">🏭</div>'
         )
         st.markdown(f"""
-        <div style="text-align:center;margin-bottom:2rem;">
+        <div style="text-align:center;margin-bottom:1.75rem;">
             {_login_logo}
-            <h1 style="color:#F8FAFC;font-size:1.62rem;font-weight:800;margin:0;
-                       letter-spacing:-.5px;line-height:1.25;">Demand &amp; Supply<br>Planning System</h1>
-            <p style="color:#5E7196;font-size:.71rem;margin-top:.5rem;letter-spacing:1.5px;
-                      text-transform:uppercase;">Masan Group Corporation</p>
+            <div style="font-size:.62rem;font-weight:700;color:#38BDF8;letter-spacing:2.5px;
+                        text-transform:uppercase;margin-bottom:.4rem;">Forecast to Available System</div>
+            <h1 style="color:#F1F5F9;font-size:1.75rem;font-weight:800;margin:0;
+                       letter-spacing:-.5px;line-height:1.2;">F2A System</h1>
+            <p style="color:#475569;font-size:.68rem;margin-top:.45rem;letter-spacing:1.2px;
+                      text-transform:uppercase;">Supply Chain Department &nbsp;·&nbsp; Masan MeatDeli</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -277,19 +312,22 @@ if not user:
 
         # ── LOGIN ──
         st.markdown("""
-        <div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(8px);
-                    border:1px solid rgba(255,255,255,0.08);border-radius:16px;
-                    padding:1.75rem 1.75rem .5rem;">
-            <p style="color:#6B7E9E;font-size:.7rem;font-weight:700;text-transform:uppercase;
-                      letter-spacing:1.5px;text-align:center;margin:0 0 1.25rem;">ĐĂNG NHẬP HỆ THỐNG</p>
+        <div style="border:1px solid rgba(255,255,255,0.18);border-radius:14px;
+                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:rgba(15,23,42,.55);
+                    backdrop-filter:blur(18px);">
+            <p style="color:#E2E8F0;font-size:.72rem;font-weight:700;text-transform:uppercase;
+                      letter-spacing:2px;text-align:center;margin:0 0 .75rem;">
+                ĐĂNG NHẬP HỆ THỐNG
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
-        email_in    = st.text_input("Email", placeholder="your.name@masangroup.com",
+        email_in    = st.text_input("Email", placeholder="your.name@masanmeatdeli.com",
                                     label_visibility="collapsed", key="l_email")
         password_in = st.text_input("Mật khẩu", type="password", placeholder="Mật khẩu",
                                     label_visibility="collapsed", key="l_pw")
 
+        st.markdown("<div style='height:.25rem'></div>", unsafe_allow_html=True)
         if st.button("Đăng nhập  →", type="primary", use_container_width=True, key="l_btn"):
             if not email_in or not password_in:
                 st.error("Vui lòng nhập đầy đủ thông tin.")
@@ -299,12 +337,12 @@ if not user:
                     token = create_session(u)
                     st.session_state["user"] = u
                     st.session_state["_session_token"] = token
-                    st.session_state["_write_cookie"] = token  # ghi cookie ở main area
+                    st.session_state["_write_cookie"] = token
                     st.rerun()
                 else:
                     st.error("Email hoặc mật khẩu không đúng, hoặc tài khoản bị vô hiệu hóa.")
 
-        st.markdown('<p style="color:#3C4D6B;font-size:.71rem;text-align:center;margin-top:.85rem;">'
+        st.markdown('<p style="color:#CBD5E1;font-size:.68rem;text-align:center;margin-top:.75rem;">'
                     'Liên hệ quản trị viên nếu quên mật khẩu</p>', unsafe_allow_html=True)
 
     st.stop()
@@ -321,8 +359,8 @@ _pages = [
 ]
 if user["system_role"] in ("ADMIN", "MEMBER"):
     _pages.append(st.Page("pages/4_Upload.py", title="Upload FC & KHSX", icon="📤"))
-_pages.append(st.Page("pages/7_Master_Data.py", title="Upload Master Data", icon="📁"))
-_pages.append(st.Page("pages/5_Cai_Dat.py", title="Cài đặt", icon="⚙️"))
+_pages.append(st.Page("pages/7_Master_Data.py", title="Master Data",        icon="📁"))
+_pages.append(st.Page("pages/5_Cai_Dat.py",     title="Cài đặt hệ thống",  icon="⚙️"))
 
 pg = st.navigation(_pages, position="hidden")
 

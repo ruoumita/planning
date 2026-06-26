@@ -13,7 +13,7 @@ from utils.database import (
 from sqlalchemy import text
 
 user = st.session_state["user"]
-page_header("⚙️ Cài đặt", "Quản lý người dùng, phân quyền và kết nối database")
+page_header("⚙️ Cài đặt hệ thống", "Quản lý người dùng, phân quyền và kết nối database")
 
 _BR_OPTIONS = ["DP", "SP", "DP+SP"]
 

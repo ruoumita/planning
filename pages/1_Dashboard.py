@@ -2,13 +2,12 @@ import io
 import streamlit as st
 import pandas as pd
 import altair as alt
-from sqlalchemy import text
 from utils.auth import page_header
 from utils.ui import section, kpi_cards, style_chart, chart_colors
-from utils.database import get_engine, get_table_stats, get_versions, get_version_totals, fmt_ver
+from utils.database import get_table_stats, get_versions, get_upload_activity, get_khsx_spotlight, fmt_ver
 
 user = st.session_state["user"]
-page_header("📊 Dashboard", "Bức tranh tổng thể chuỗi cung ứng — Demand & Supply Planning")
+page_header("📊 Dashboard", "Bức tranh tổng thể chuỗi cung ứng — F2A Forecast-to-Available")
 
 
 def _to_excel(df: pd.DataFrame) -> bytes:
@@ -72,24 +71,15 @@ st.divider()
 
 # ══ UPLOAD ACTIVITY ══════════════════════════════════════════
 try:
-    engine = get_engine()
-    history = []
-    with engine.connect() as conn:
-        for tbl, (label, _) in TABLES.items():
-            rows = conn.execute(text(f"""
-                SELECT MIN(`uploaded_at`) AS d, `version_id`
-                FROM `{tbl}` GROUP BY `version_id`
-            """)).fetchall()
-            for r in rows:
-                if r[0]:
-                    history.append({"Bảng": label, "Ngày": pd.to_datetime(str(r[0])).date()})
+    df_activity = get_upload_activity()
 
     cL, cR = st.columns([1.5, 1])
     with cL:
         section("Hoạt động upload", "số phiên bản theo ngày")
-        if history:
-            df_h = pd.DataFrame(history)
-            agg = df_h.groupby(["Ngày", "Bảng"]).size().reset_index(name="count")
+        if not df_activity.empty:
+            df_activity["Bảng"] = df_activity["table"].map(lambda t: TABLES.get(t, (t,))[0])
+            df_activity["Ngày"] = pd.to_datetime(df_activity["uploaded_at"]).dt.date
+            agg = df_activity.groupby(["Ngày", "Bảng"]).size().reset_index(name="count")
             chart = alt.Chart(agg).mark_bar(cornerRadius=2).encode(
                 x=alt.X("Ngày:T", title=None, axis=alt.Axis(format="%d/%m")),
                 y=alt.Y("count:Q", title="Số phiên bản"),
@@ -121,17 +111,7 @@ try:
     if versions:
         lv = versions[0]["version_id"]
         ver_lbl = fmt_ver(lv, versions[0]["uploaded_at"])
-        engine = get_engine()
-        with engine.connect() as conn:
-            df_k = pd.read_sql(text("""
-                SELECT `item_code`, SUM(`qty_1`) AS u1, SUM(`qty_2`) AS u2
-                FROM `khsx` WHERE `version_id` = :v
-                GROUP BY `item_code` ORDER BY u1 DESC LIMIT 50
-            """), conn, params={"v": lv})
-
-        for c in ("u1", "u2"):
-            if c in df_k.columns:
-                df_k[c] = pd.to_numeric(df_k[c], errors="coerce").fillna(0.0)
+        df_k = get_khsx_spotlight(lv)
 
         if not df_k.empty:
             f1, f2 = st.columns([3, 1])
