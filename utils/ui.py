@@ -58,7 +58,10 @@ _DARK = {
 
 
 def get_theme() -> str:
-    """'light' | 'dark' — đọc từ Streamlit native theme; mặc định 'light'."""
+    """'light' | 'dark' — ưu tiên override từ sidebar toggle, fallback Streamlit native."""
+    override = st.session_state.get("_theme_override")
+    if override in ("light", "dark"):
+        return override
     try:
         t = st.context.theme.type
         return t if t in ("light", "dark") else "light"
