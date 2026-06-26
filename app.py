@@ -7,7 +7,8 @@ from pathlib import Path
 import streamlit as st
 from utils.database import (
     get_database_url, save_database_url, test_connection,
-    create_all_tables, is_db_initialized, build_mysql_url,
+    create_all_tables, is_db_initialized, build_postgres_url,
+    ensure_schema_and_create_admin,
 )
 from utils.auth import (
     authenticate, create_initial_admin,
@@ -170,9 +171,9 @@ def _sidebar_footer(user: dict):
 def _login_logo_html():
     if _LOGO_SRC:
         return (
-            f'<img src="{_LOGO_SRC}" style="width:239px;height:120px;border-radius:10px;'
-            f'object-fit:contain;background:#FFFFFF;padding:10px;margin-bottom:1.1rem;'
-            f'box-shadow:0 8px 32px rgba(0,0,0,0.4);" alt="MML">'
+            f'<img src="{_LOGO_SRC}" style="width:180px;height:90px;border-radius:10px;'
+            f'object-fit:contain;background:#FFFFFF;padding:8px;margin-bottom:.9rem;'
+            f'box-shadow:0 8px 24px rgba(0,0,0,0.35);" alt="MML">'
         )
     return (
         '<div style="width:120px;height:60px;background:#0EA5E9;'
@@ -211,12 +212,27 @@ def _render_prelogin_css():
         .stApp .stMarkdown p,
         .stApp .stExpander summary,
         .stApp [data-testid="stExpander"] summary{
-            color:#F8FAFC !important;
+            color:#E2E8F0 !important;
         }
 
         .stApp .stExpander summary{
             font-weight:700 !important;
             font-size:.96rem !important;
+            color:#F1F5F9 !important;
+            opacity:1 !important;
+        }
+
+        .stApp .stExpander div[role="region"] {
+            color:#E2E8F0 !important;
+            opacity:1 !important;
+        }
+
+        .stApp .stExpander p,
+        .stApp .stExpander .stAlert,
+        .stApp .stExpander .stMarkdown,
+        .stApp .stExpander .stMarkdown p {
+            color:#E2E8F0 !important;
+            opacity:1 !important;
         }
 
         /* ==========================================================
@@ -224,7 +240,9 @@ def _render_prelogin_css():
         ========================================================== */
 
         .stApp .stTextInput > div > div,
-        .stApp .stPasswordInput > div > div{
+        .stApp .stPasswordInput > div > div,
+        .stApp .stNumberInput > div > div,
+        .stApp .stSelectbox > div > div{
             background:#FFFFFF !important;
             border:1px solid #CBD5E1 !important;
             border-radius:10px !important;
@@ -232,10 +250,13 @@ def _render_prelogin_css():
         }
 
         .stApp .stTextInput input,
-        .stApp .stPasswordInput input{
+        .stApp .stPasswordInput input,
+        .stApp .stNumberInput input,
+        .stApp .stSelectbox div[data-baseweb="select"] input{
             background:#FFFFFF !important;
             color:#111827 !important;
             caret-color:#111827 !important;
+            opacity:1 !important;
         }
 
         .stApp .stTextInput input::placeholder,
@@ -290,9 +311,10 @@ def _render_prelogin_css():
         .stApp .stAlert,
         .stApp .stExpander,
         .stApp .stForm{
-            background:rgba(15,23,42,.90) !important;
+            background:#111827 !important;
             border:1px solid #334155 !important;
             color:#E2E8F0 !important;
+            box-shadow:0 0 0 1px rgba(255,255,255,0.04) inset !important;
         }
 
         /* ==========================================================
@@ -317,9 +339,11 @@ def _render_prelogin_css():
         .stTextInput label,
         .stPasswordInput label,
         .stNumberInput label,
-        .stSelectbox label{
+        .stSelectbox label,
+        .stApp [data-testid="stWidgetLabel"] {
             color:#F8FAFC !important;
-            font-weight:600 !important;
+            font-weight:700 !important;
+            text-shadow:0 0 1px rgba(0,0,0,0.35) !important;
         }
 
     </style>
@@ -351,15 +375,16 @@ def _render_setup_banner():
 
 
 def _render_db_wizard(db_url, db_ready):
-    if db_url and db_ready:
+    setup_step = st.session_state.get("setup_step", 1)
+    if db_url and db_ready and setup_step >= 4:
         return False
 
     _render_setup_banner()
 
-    with st.expander("**Bước 1 — Kết nối Database**", expanded=not db_url):
+    with st.expander("**Bước 1 — Kết nối Database**", expanded=setup_step == 1):
         c1, c2 = st.columns([3, 1])
         db_host = c1.text_input("Host", value="192.168.1.113", key="w_host")
-        db_port = c2.text_input("Port", value="3307", key="w_port")
+        db_port = c2.text_input("Port", value="5434", key="w_port")
         c3, c4 = st.columns(2)
         db_user = c3.text_input("Username", value="planning_scd", key="w_user")
         db_pass = c4.text_input("Password", type="password", key="w_pass")
@@ -369,42 +394,54 @@ def _render_db_wizard(db_url, db_ready):
             if not all([db_host, db_user, db_pass, db_name]):
                 st.warning("Điền đầy đủ thông tin.")
             else:
-                new_url = build_mysql_url(db_host, int(db_port), db_name, db_user, db_pass)
+                new_url = build_postgres_url(db_host, int(db_port), db_name, db_user, db_pass)
                 ok, msg = test_connection(new_url)
                 if ok:
                     save_database_url(new_url)
-                    st.success(msg + " — Đã lưu!")
+                    st.session_state["setup_step"] = 2
+                    st.success(f"✅ {msg} — Đã lưu kết nối thành công. Bây giờ bạn có thể chuyển sang bước tạo bảng.")
                     st.rerun()
                 else:
                     st.error(msg)
 
-    if db_url:
-        with st.expander("**Bước 2 — Tạo bảng Database**", expanded=not db_ready):
-            st.info("Tạo toàn bộ bảng nghiệp vụ (idempotent — an toàn khi chạy lại).")
+    if db_url and setup_step >= 2:
+        with st.expander("**Bước 2 — Tạo bảng Database**", expanded=setup_step == 2):
+            st.info("Tạo toàn bộ bảng nghiệp vụ (idempotent — an toàn khi chạy lại). Sau khi bảng được tạo, hệ thống sẽ chuyển sang bước tạo tài khoản admin đầu tiên.")
             if st.button("🗄️  Tạo tất cả bảng", type="primary", use_container_width=True, key="w_create"):
                 with st.spinner("Đang tạo bảng..."):
                     ok, msg = create_all_tables()
-                st.success(msg) if ok else st.error(msg)
                 if ok:
+                    st.session_state["setup_step"] = 3
+                    st.success(f"✅ {msg} — Bây giờ bạn có thể tạo tài khoản admin đầu tiên.")
                     st.rerun()
+                else:
+                    st.error(msg)
 
-    if db_ready:
-        with st.expander("**Bước 3 — Tạo tài khoản Admin đầu tiên**", expanded=True):
+    if (db_ready or setup_step >= 3) and setup_step < 4:
+        with st.expander("**Bước 3 — Tạo tài khoản Admin đầu tiên**", expanded=setup_step == 3):
+            st.info("Ghi nhớ thật kỹ tài khoản nhé.")
             with st.form("setup_admin_form"):
-                a_email = st.text_input("Email Admin *")
-                a_name  = st.text_input("Họ tên")
-                a_br    = st.selectbox("Business Role", _BR_OPTIONS)
-                a_pw    = st.text_input("Mật khẩu *", type="password")
-                a_pw2   = st.text_input("Xác nhận mật khẩu", type="password")
+                a_email = st.text_input("Email Admin *", value="admin", key="setup_admin_email")
+                a_name  = st.text_input("Họ tên", value="Admin", key="setup_admin_name")
+                a_br    = st.selectbox("Business Role", _BR_OPTIONS, key="setup_admin_br")
+                a_pw    = st.text_input("Mật khẩu *", value="admin", type="password", key="setup_admin_pw")
+                a_pw2   = st.text_input("Xác nhận mật khẩu", value="admin", type="password", key="setup_admin_pw2")
                 if st.form_submit_button("✅  Hoàn tất thiết lập", type="primary", use_container_width=True):
                     if not a_email or not a_pw:
                         st.error("Email và mật khẩu là bắt buộc.")
                     elif a_pw != a_pw2:
                         st.error("Mật khẩu xác nhận không khớp.")
                     else:
-                        ok, msg = create_initial_admin(a_email.strip().lower(), a_name, a_pw, a_br)
+                        ok, msg = ensure_schema_and_create_admin(
+                            a_email.strip().lower(), a_name, a_pw, a_br, get_database_url()
+                        )
                         if ok:
-                            st.success("✅  Hệ thống sẵn sàng — vui lòng đăng nhập.")
+                            st.session_state["setup_step"] = 4
+                            st.success(
+                                "✅  Hệ thống sẵn sàng.\n"
+                                f"Tài khoản đăng nhập đầu tiên: email = {a_email.strip().lower()}\n"
+                                f"mật khẩu = {a_pw}"
+                            )
                             st.rerun()
                         else:
                             st.error(msg)

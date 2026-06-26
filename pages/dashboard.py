@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 from utils.ui import page_header, section, kpi_cards, style_chart, chart_colors, to_excel_bytes
-from utils.database import get_table_stats, get_versions, get_upload_activity, get_khsx_spotlight, fmt_ver
+from utils.database import get_table_stats, get_versions, get_upload_activity, get_khsx_spotlight, fmt_ver, get_md_items_by_version, get_md_items_slicers
 
 user = st.session_state["user"]
 page_header("📊 Dashboard", "Bức tranh tổng thể chuỗi cung ứng — F2A Forecast-to-Available")
@@ -102,7 +102,34 @@ try:
     if versions:
         lv = versions[0]["version_id"]
         ver_lbl = fmt_ver(lv, versions[0]["uploaded_at"])
+        # product attribute slicers (from latest md_items)
+        md_df = get_md_items_by_version()
+        md_slicers = get_md_items_slicers()
+        if not md_df.empty:
+            a1, a2, a3, a4 = st.columns([1, 1, 1, 1])
+            d_cat = a1.multiselect("Category", md_slicers.get("category_desc", []), key="d_cat")
+            d_sub = a2.multiselect("Sub Category", md_slicers.get("sub_category_desc", []), key="d_sub")
+            d_brand = a3.multiselect("Brand", md_slicers.get("brand_desc", []), key="d_brand")
+            d_brandy = a4.multiselect("Brandy", md_slicers.get("brandy_desc", []), key="d_brandy")
+            m = pd.Series([True] * len(md_df))
+            if d_cat:
+                m &= md_df["category_desc"].isin(d_cat)
+            if d_sub:
+                m &= md_df["sub_category_desc"].isin(d_sub)
+            if d_brand:
+                m &= md_df["brand_desc"].isin(d_brand)
+            if d_brandy:
+                m &= md_df["brandy_desc"].isin(d_brandy)
+            md_allowed = md_df.loc[m, "item_code"].dropna().unique().tolist()
+        else:
+            md_allowed = None
+
         df_k = get_khsx_spotlight(lv)
+        # attach masterdata attributes (if available) and apply filters
+        if md_allowed is not None and not df_k.empty:
+            md_small = md_df[["item_code", "category_desc", "sub_category_desc", "brand_desc", "brandy_desc"]].drop_duplicates("item_code")
+            df_k = df_k.merge(md_small, on="item_code", how="left")
+            df_k = df_k[df_k["item_code"].isin(md_allowed)]
 
         if not df_k.empty:
             f1, f2 = st.columns([3, 1])

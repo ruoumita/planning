@@ -3,7 +3,10 @@ import pandas as pd
 import altair as alt
 from sqlalchemy import text
 from utils.ui import page_header, section, kpi_cards, style_chart, chart_colors, to_excel_bytes
-from utils.database import get_versions, get_version_rows, get_version_totals, get_engine, fmt_ver
+from utils.database import (
+    get_versions, get_version_rows, get_version_totals, get_engine, fmt_ver,
+    get_md_items_by_version, get_md_items_slicers,
+)
 
 user = st.session_state["user"]
 page_header("📋 Lịch sử & Xu hướng", "Theo dõi diễn biến dữ liệu qua từng lần upload và tải lại bất kỳ phiên bản nào")
@@ -31,6 +34,28 @@ versions = get_versions(tbl)
 if not versions:
     st.info(f"Bảng **{tbl_label}** chưa có dữ liệu nào được tải lên.")
     st.stop()
+
+# Product attribute slicers (global, from latest md_items)
+md_df = get_md_items_by_version()
+md_slicers = get_md_items_slicers()
+if not md_df.empty:
+    a, b, c, d = st.columns(4)
+    cat_sel = a.multiselect("Category", md_slicers.get("category_desc", []), key="vh_cat")
+    sub_sel = b.multiselect("Sub Category", md_slicers.get("sub_category_desc", []), key="vh_sub")
+    brand_sel = c.multiselect("Brand", md_slicers.get("brand_desc", []), key="vh_brand")
+    brandy_sel = d.multiselect("Brandy", md_slicers.get("brandy_desc", []), key="vh_brandy")
+    mask = pd.Series([True] * len(md_df))
+    if cat_sel:
+        mask &= md_df["category_desc"].isin(cat_sel)
+    if sub_sel:
+        mask &= md_df["sub_category_desc"].isin(sub_sel)
+    if brand_sel:
+        mask &= md_df["brand_desc"].isin(brand_sel)
+    if brandy_sel:
+        mask &= md_df["brandy_desc"].isin(brandy_sel)
+    md_allowed = md_df.loc[mask, "item_code"].dropna().unique().tolist()
+else:
+    md_allowed = None
 
 # ══ trend / totals ═══════════════════════════════════════════
 totals = get_version_totals(tbl)
@@ -86,7 +111,7 @@ summary_rows = []
 with engine.connect() as conn:
     for v in versions:
         rc = conn.execute(
-            text(f"SELECT COUNT(*) FROM `{tbl}` WHERE `version_id` = :v"),
+            text(f"SELECT COUNT(*) FROM {tbl} WHERE version_id = :v"),
             {"v": v["version_id"]}
         ).scalar()
         summary_rows.append({
@@ -118,8 +143,10 @@ sel_rc  = next(r["Số dòng"] for r in summary_rows if r["Phiên bản"] == sel
 
 with st.spinner("Đang tải dữ liệu..."):
     df_preview = get_version_rows(tbl, sel_ver, limit=500)
-
 if "item_code" in df_preview.columns:
+    # apply md_items attribute filter if present
+    if md_allowed is not None:
+        df_preview = df_preview[df_preview["item_code"].isin(md_allowed)]
     all_items = sorted(df_preview["item_code"].dropna().unique().tolist())
     sel_items = st.multiselect("Lọc Item Code", all_items, placeholder="Tất cả SKU — chọn để thu hẹp")
     if sel_items:
@@ -136,6 +163,9 @@ dl_col, _ = st.columns([1, 3])
 with dl_col:
     with st.spinner("Chuẩn bị file..."):
         df_full = get_version_rows(tbl, sel_ver)
+        # apply md_items attribute filter + explicit item filters
+        if md_allowed is not None:
+            df_full = df_full[df_full["item_code"].isin(md_allowed)]
         if sel_items:
             df_full = df_full[df_full["item_code"].isin(sel_items)]
     xlsx = to_excel_bytes(df_full)

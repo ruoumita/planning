@@ -6,6 +6,7 @@ from utils.ui import section, kpi_cards, style_chart, chart_colors
 from utils.database import (
     get_versions, get_khsx_data_by_version,
     get_fc_data_by_version, get_khsx_version_refs, fmt_ver,
+    get_md_items_by_version, get_md_items_slicers,
 )
 
 user = st.session_state["user"]
@@ -13,6 +14,30 @@ page_header("📈 KHSX vs FC LE", "Đối chiếu kế hoạch sản xuất vớ
 
 
 # ══ SLICER BAND ══════════════════════════════════════════════
+# Product attribute slicers from latest md_items
+md_df = get_md_items_by_version()
+md_slicers = get_md_items_slicers()
+if not md_df.empty:
+    a, b, c, d = st.columns(4)
+    cat_sel = a.multiselect("Category", md_slicers.get("category_desc", []), key="f_cat")
+    sub_sel = b.multiselect("Sub Category", md_slicers.get("sub_category_desc", []), key="f_subcat")
+    brand_sel = c.multiselect("Brand", md_slicers.get("brand_desc", []), key="f_brand")
+    brandy_sel = d.multiselect("Brandy", md_slicers.get("brandy_desc", []), key="f_brandy")
+    # compute allowed item codes
+    mask = pd.Series([True] * len(md_df))
+    if cat_sel:
+        mask &= md_df["category_desc"].isin(cat_sel)
+    if sub_sel:
+        mask &= md_df["sub_category_desc"].isin(sub_sel)
+    if brand_sel:
+        mask &= md_df["brand_desc"].isin(brand_sel)
+    if brandy_sel:
+        mask &= md_df["brandy_desc"].isin(brandy_sel)
+    md_allowed = md_df.loc[mask, "item_code"].dropna().unique().tolist()
+else:
+    md_allowed = None
+
+st.divider()
 khsx_vers = get_versions("khsx")
 if not khsx_vers:
     st.info("Chưa có dữ liệu KHSX. Vui lòng upload trước.")
@@ -66,6 +91,9 @@ all_items = sorted(df_khsx["item_code"].dropna().unique().tolist())
 sel_items = st.multiselect("Lọc Item Code", all_items, placeholder="Tất cả SKU — chọn để thu hẹp")
 if sel_items:
     df_khsx = df_khsx[df_khsx["item_code"].isin(sel_items)]
+elif md_allowed is not None:
+    # apply md_items attribute filter when no explicit item selection
+    df_khsx = df_khsx[df_khsx["item_code"].isin(md_allowed)]
 
 CC = chart_colors()
 
@@ -94,6 +122,8 @@ def show_comparison(df_k, fc_table, fc_version, time_unit, section_title, qc, ut
         return
     if sel_items:
         df_fc = df_fc[df_fc["item_code"].isin(sel_items)]
+    elif md_allowed is not None:
+        df_fc = df_fc[df_fc["item_code"].isin(md_allowed)]
 
     df_fc["from_date"] = pd.to_datetime(df_fc["from_date"], errors="coerce")
     if time_unit == "week":

@@ -8,7 +8,7 @@ from utils.auth import (
 )
 from utils.database import (
     get_database_url, save_database_url,
-    test_connection, create_all_tables, build_mysql_url, get_engine,
+    test_connection, create_all_tables, build_postgres_url, get_engine,
 )
 from utils.ui import page_header
 from sqlalchemy import text
@@ -177,11 +177,11 @@ if is_admin(user):
         else:
             st.warning("Chưa cấu hình Database URL.")
 
-        with st.expander("🔧 Thay đổi kết nối MariaDB", expanded=not current_url):
+        with st.expander("🔧 Thay đổi kết nối PostgreSQL", expanded=not current_url):
             with st.form("db_conn_form"):
                 c1, c2 = st.columns([3, 1])
                 db_host = c1.text_input("Host", value="192.168.1.113")
-                db_port = c2.number_input("Port", value=3307, min_value=1, max_value=65535, step=1)
+                db_port = c2.number_input("Port", value=5434, min_value=1, max_value=65535, step=1)
                 db_name = st.text_input("Database", value="planningmml")
                 c3, c4 = st.columns(2)
                 db_user = c3.text_input("Username", value="planning_scd")
@@ -190,7 +190,7 @@ if is_admin(user):
                     if not all([db_host, db_user, db_pass, db_name]):
                         st.warning("Điền đầy đủ thông tin kết nối.")
                     else:
-                        new_url = build_mysql_url(db_host, int(db_port), db_name, db_user, db_pass)
+                        new_url = build_postgres_url(db_host, int(db_port), db_name, db_user, db_pass)
                         with st.spinner("Đang kết nối..."):
                             ok, msg = test_connection(new_url)
                         if ok:
