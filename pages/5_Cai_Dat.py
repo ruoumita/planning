@@ -129,10 +129,24 @@ pw_tab = tabs[1] if is_admin(user) else tabs[0]
 theme_tab = tabs[3] if is_admin(user) else tabs[1]
 with pw_tab:
     st.markdown("#### Thông tin tài khoản")
-    ci1, ci2, ci3 = st.columns(3)
-    ci1.metric("Email", user["email"])
-    ci2.metric("Họ tên", user["full_name"])
-    ci3.metric("Quyền", f"{user['system_role']} / {user['business_role']}")
+    _badge = {"ADMIN": "#EF4444", "MEMBER": "#F59E0B", "VIEWER": "#10B981"}.get(user["system_role"], "#64748B")
+    st.markdown(f"""
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:.4rem 0 1rem;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem;">
+    <div style="font-size:.68rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.3rem;">Email</div>
+    <div style="font-size:.88rem;font-weight:600;color:var(--text);word-break:break-all;">{user["email"]}</div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem;">
+    <div style="font-size:.68rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.3rem;">Họ tên</div>
+    <div style="font-size:.88rem;font-weight:600;color:var(--text);">{user["full_name"] or "—"}</div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem;">
+    <div style="font-size:.68rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.3rem;">Phân quyền</div>
+    <div style="font-size:.88rem;font-weight:600;color:{_badge};">{user["system_role"]}</div>
+    <div style="font-size:.76rem;color:var(--text-dim);margin-top:.15rem;">{user["business_role"]}</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
     st.divider()
     st.markdown("#### Đổi mật khẩu")

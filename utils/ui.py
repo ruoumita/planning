@@ -337,30 +337,54 @@ hr {{ border-color: var(--border) !important; margin:1.2rem 0 !important; }}
     border-radius: 14px !important;
 }}
 
-/* Inputs */
+/* Text / password / number inputs — target mọi wrapper layer */
 .stApp [data-baseweb="input"],
-.stApp [data-baseweb="textarea"],
-.stApp [data-baseweb="select"] > div:first-child {{
+.stApp [data-baseweb="base-input"],
+.stApp [data-baseweb="input"] > div,
+.stApp .stTextInput > div > div,
+.stApp .stPasswordInput > div > div,
+.stApp .stNumberInput > div > div {{
     background-color: {D['surface_2']} !important;
     border-color: {D['border_strong']} !important;
 }}
 .stApp [data-baseweb="input"] input,
+.stApp [data-baseweb="base-input"] input,
 .stApp [data-baseweb="textarea"] textarea {{
     color: {D['text']} !important;
     background-color: transparent !important;
     caret-color: {D['brand']} !important;
 }}
 .stApp [data-baseweb="input"] input::placeholder,
+.stApp [data-baseweb="base-input"] input::placeholder,
 .stApp [data-baseweb="textarea"] textarea::placeholder {{
     color: {D['text_faint']} !important;
 }}
-.stApp [data-baseweb="select"] [data-value],
-.stApp [data-baseweb="select"] input,
-.stApp [data-baseweb="select"] span {{
-    color: {D['text']} !important;
+.stApp [data-baseweb="textarea"],
+.stApp .stTextArea > div > div {{
+    background-color: {D['surface_2']} !important;
+    border-color: {D['border_strong']} !important;
 }}
 
-/* Selectbox dropdown */
+/* Selectbox — target tất cả div con */
+.stApp [data-baseweb="select"],
+.stApp [data-baseweb="select"] > div,
+.stApp [data-baseweb="select"] > div > div,
+.stApp .stSelectbox > div > div {{
+    background-color: {D['surface_2']} !important;
+    border-color: {D['border_strong']} !important;
+}}
+.stApp [data-baseweb="select"] [data-value],
+.stApp [data-baseweb="select"] input,
+.stApp [data-baseweb="select"] span,
+.stApp [data-baseweb="select"] [aria-selected] {{
+    color: {D['text']} !important;
+}}
+.stApp [data-baseweb="select"] svg,
+.stApp [data-baseweb="select"] svg path {{
+    fill: {D['text_dim']} !important;
+}}
+
+/* Selectbox dropdown panel */
 .stApp [data-baseweb="popover"],
 .stApp [data-baseweb="menu"] {{
     background-color: {D['surface']} !important;
@@ -377,7 +401,7 @@ hr {{ border-color: var(--border) !important; margin:1.2rem 0 !important; }}
     color: {D['brand']} !important;
 }}
 
-/* File uploader */
+/* File uploader dropzone */
 .stApp [data-testid="stFileUploadDropzone"],
 .stApp .stFileUploader section,
 .stApp .stFileUploader > div > div {{
@@ -389,6 +413,20 @@ hr {{ border-color: var(--border) !important; margin:1.2rem 0 !important; }}
 .stApp [data-testid="stFileUploadDropzone"] span,
 .stApp [data-testid="stFileUploadDropzone"] small {{
     color: {D['text_dim']} !important;
+}}
+/* Browse files button */
+.stApp [data-testid="stFileUploadDropzone"] button,
+.stApp [data-testid="stFileUploadDropzone"] > div button,
+.stApp .stFileUploader button {{
+    background-color: {D['surface']} !important;
+    color: {D['brand']} !important;
+    border: 1px solid {D['border_strong']} !important;
+    border-radius: 8px !important;
+}}
+.stApp [data-testid="stFileUploadDropzone"] button:hover,
+.stApp .stFileUploader button:hover {{
+    background-color: {D['brand_soft']} !important;
+    color: {D['brand']} !important;
 }}
 .stApp [data-testid="stFileUploaderFile"] {{
     background-color: {D['surface']} !important;
