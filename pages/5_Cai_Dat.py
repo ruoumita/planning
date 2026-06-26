@@ -10,7 +10,6 @@ from utils.database import (
     get_database_url, save_database_url,
     test_connection, create_all_tables, build_mysql_url, get_engine,
 )
-from utils.ui import get_theme
 from sqlalchemy import text
 
 user = st.session_state["user"]
@@ -20,9 +19,9 @@ _BR_OPTIONS = ["DP", "SP", "DP+SP"]
 
 # ── Tab layout ────────────────────────────────────────────────
 if is_admin(user):
-    tabs = st.tabs(["👥 Người dùng", "🔐 Mật khẩu", "🗄️ Database", "🎨 Giao diện"])
+    tabs = st.tabs(["👥 Người dùng", "🔐 Mật khẩu", "🗄️ Database"])
 else:
-    tabs = st.tabs(["🔐 Mật khẩu", "🎨 Giao diện"])
+    tabs = st.tabs(["🔐 Mật khẩu"])
 
 # ══════════════════════════════════════════════════════════════
 # Tab: Quản lý người dùng (chỉ ADMIN)
@@ -126,7 +125,6 @@ if is_admin(user):
 # Tab: Đổi mật khẩu cá nhân
 # ══════════════════════════════════════════════════════════════
 pw_tab = tabs[1] if is_admin(user) else tabs[0]
-theme_tab = tabs[3] if is_admin(user) else tabs[1]
 with pw_tab:
     st.markdown("#### Thông tin tài khoản")
     _badge = {"ADMIN": "#EF4444", "MEMBER": "#F59E0B", "VIEWER": "#10B981"}.get(user["system_role"], "#64748B")
@@ -211,33 +209,3 @@ if is_admin(user):
             else:
                 st.error(f"❌ {msg}")
 
-# ══════════════════════════════════════════════════════════════
-# Tab: Giao diện (tất cả user)
-# ══════════════════════════════════════════════════════════════
-with theme_tab:
-    st.markdown("#### 🎨 Chế độ giao diện")
-    _cur = get_theme()
-
-    c_light, c_dark = st.columns(2)
-    with c_light:
-        selected_light = st.button(
-            "☀️  Sáng (Light)",
-            use_container_width=True,
-            type="primary" if _cur == "light" else "secondary",
-            key="btn_light",
-        )
-        if selected_light:
-            st.session_state["_theme_override"] = "light"
-            st.rerun()
-    with c_dark:
-        selected_dark = st.button(
-            "🌙  Tối (Dark)",
-            use_container_width=True,
-            type="primary" if _cur == "dark" else "secondary",
-            key="btn_dark",
-        )
-        if selected_dark:
-            st.session_state["_theme_override"] = "dark"
-            st.rerun()
-
-    st.caption(f"Đang dùng: **{'🌙 Tối' if _cur == 'dark' else '☀️ Sáng'}**")

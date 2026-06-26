@@ -30,11 +30,11 @@ st.set_page_config(
 # ── Global design-system CSS (themable, sync light/dark) ─────
 inject_global_css()
 
-# ── Sidebar — theme-aware (sáng theo giao diện sáng, tối theo tối) ─
+# ── Sidebar — Industrial Dark Steel ──────────────────────────
 st.markdown("""<style>
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%) !important;
-    border-right: 1px solid var(--border) !important;
+    background: #1E2530 !important;
+    border-right: 1px solid #2E3A4E !important;
 }
 section[data-testid="stSidebar"] > div:first-child {
     display:flex !important; flex-direction:column !important; height:100vh !important;
@@ -43,25 +43,26 @@ section[data-testid="stSidebar"] > div:first-child {
 [data-testid="stSidebarNav"] { display:none !important; }
 [data-testid="stSidebar"] .stPageLink { margin:0 !important; }
 [data-testid="stSidebar"] .stPageLink a {
-    display:flex !important; align-items:center !important; gap:.6rem !important;
-    padding:.58rem .9rem !important; margin:2px .65rem !important; border-radius:9px !important;
-    color:var(--text-dim) !important; font-size:.85rem !important; font-weight:500 !important;
-    text-decoration:none !important; transition:all .15s ease !important;
+    display:flex !important; align-items:center !important; gap:.55rem !important;
+    padding:.52rem .85rem !important; margin:1px .5rem !important; border-radius:4px !important;
+    color:#94A3B8 !important; font-size:.83rem !important; font-weight:400 !important;
+    text-decoration:none !important; transition:all .12s ease !important;
     border-left:3px solid transparent !important;
 }
 [data-testid="stSidebar"] .stPageLink a p,
 [data-testid="stSidebar"] .stPageLink a span { color:inherit !important; }
 [data-testid="stSidebar"] .stPageLink a:hover {
-    background:var(--brand-soft) !important; color:var(--text) !important; }
+    background:#2A3444 !important; color:#CBD5E1 !important;
+    border-left-color:#38BDF8 !important; }
 [data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
-    background:var(--brand-soft) !important; color:var(--brand) !important;
-    border-left:3px solid var(--brand) !important; font-weight:600 !important; }
+    background:#2A3444 !important; color:#38BDF8 !important;
+    border-left:3px solid #38BDF8 !important; font-weight:600 !important; }
 [data-testid="stSidebar"] .stButton > button {
-    font-size:.8rem !important; font-weight:600 !important; border-radius:9px !important;
-    width:100% !important; background:rgba(239,68,68,0.1) !important; color:#DC2626 !important;
-    border:1px solid rgba(239,68,68,0.3) !important; transition:all .15s !important; }
+    font-size:.79rem !important; font-weight:500 !important; border-radius:4px !important;
+    width:100% !important; background:rgba(239,68,68,.1) !important; color:#F87171 !important;
+    border:1px solid rgba(239,68,68,.25) !important; transition:all .12s !important; }
 [data-testid="stSidebar"] .stButton > button:hover {
-    background:rgba(239,68,68,0.18) !important; color:#B91C1C !important; }
+    background:rgba(239,68,68,.18) !important; color:#FCA5A5 !important; }
 </style>""", unsafe_allow_html=True)
 
 
@@ -79,14 +80,14 @@ def _sidebar_header():
         'font-size:22px;flex-shrink:0;">📦</div>'
     )
     st.sidebar.markdown(f"""
-    <div style="padding:1.1rem 1rem .9rem; border-bottom:1px solid var(--border);">
-        <div style="display:flex; align-items:center; gap:.75rem;">
+    <div style="padding:1rem .9rem .85rem; border-bottom:1px solid #2E3A4E;">
+        <div style="display:flex; align-items:center; gap:.7rem;">
             {logo_html}
             <div>
-                <div style="color:var(--text);font-weight:700;font-size:.88rem;
-                            line-height:1.15;letter-spacing:-.2px;">Demand &amp; Supply</div>
-                <div style="color:var(--text-faint);font-size:.66rem;letter-spacing:.9px;
-                            text-transform:uppercase;margin-top:1px;">Planning System</div>
+                <div style="color:#E2E8F0;font-weight:700;font-size:.86rem;
+                            line-height:1.15;letter-spacing:-.1px;">Demand &amp; Supply</div>
+                <div style="color:#4A5E7A;font-size:.63rem;letter-spacing:1px;
+                            text-transform:uppercase;margin-top:2px;">Planning System</div>
             </div>
         </div>
     </div>
@@ -95,8 +96,8 @@ def _sidebar_header():
 
 def _sidebar_nav(user: dict):
     st.sidebar.markdown(
-        '<p style="color:var(--text-faint);font-size:.62rem;font-weight:700;text-transform:uppercase;'
-        'letter-spacing:1.5px;padding:.85rem 1rem .3rem;margin:0;">MENU CHÍNH</p>',
+        '<p style="color:#3E5170;font-size:.6rem;font-weight:700;text-transform:uppercase;'
+        'letter-spacing:1.6px;padding:.85rem 1rem .3rem;margin:0;">NAVIGATION</p>',
         unsafe_allow_html=True,
     )
     nav = [
@@ -125,25 +126,25 @@ def _sidebar_footer(user: dict):
     initials = "".join(w[0].upper() for w in (user["full_name"] or user["email"]).split()[:2])
 
     st.sidebar.markdown(f"""
-    <div style="border-top:1px solid var(--border);padding:.85rem 1rem .7rem;">
-        <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.6rem;">
-            <div style="width:34px;height:34px;background:linear-gradient(135deg,#3B82F6,#6366F1);
-                        border-radius:50%;display:flex;align-items:center;justify-content:center;
-                        color:#FFF;font-weight:700;font-size:.78rem;flex-shrink:0;">{initials}</div>
+    <div style="border-top:1px solid #2E3A4E;padding:.8rem .9rem .6rem;">
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+            <div style="width:30px;height:30px;background:#0284C7;
+                        border-radius:3px;display:flex;align-items:center;justify-content:center;
+                        color:#FFF;font-weight:700;font-size:.73rem;flex-shrink:0;">{initials}</div>
             <div style="min-width:0;flex:1;">
-                <div style="color:var(--text);font-weight:600;font-size:.82rem;overflow:hidden;
+                <div style="color:#CBD5E1;font-weight:600;font-size:.8rem;overflow:hidden;
                             text-overflow:ellipsis;white-space:nowrap;">{user["full_name"]}</div>
-                <div style="color:var(--text-faint);font-size:.69rem;overflow:hidden;
+                <div style="color:#4A5E7A;font-size:.67rem;overflow:hidden;
                             text-overflow:ellipsis;white-space:nowrap;">{user["email"]}</div>
             </div>
         </div>
         <div style="display:flex;gap:.3rem;flex-wrap:wrap;">
-            <span style="background:{bg}20;color:{bc};border:1px solid {bc}40;font-size:.6rem;
-                         font-weight:700;padding:2px 7px;border-radius:999px;text-transform:uppercase;
-                         letter-spacing:.6px;">{sr}</span>
-            <span style="background:rgba(91,141,239,0.16);color:#7FA8FF;border:1px solid rgba(91,141,239,0.28);
-                         font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:999px;
-                         text-transform:uppercase;letter-spacing:.6px;">{user["business_role"]}</span>
+            <span style="background:{bc}1A;color:{bc};border:1px solid {bc}40;font-size:.59rem;
+                         font-weight:700;padding:1px 6px;border-radius:3px;text-transform:uppercase;
+                         letter-spacing:.5px;">{sr}</span>
+            <span style="background:#0284C71A;color:#38BDF8;border:1px solid #0284C740;
+                         font-size:.59rem;font-weight:700;padding:1px 6px;border-radius:3px;
+                         text-transform:uppercase;letter-spacing:.5px;">{user["business_role"]}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)

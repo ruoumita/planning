@@ -1,76 +1,52 @@
 """
-Design system — bảng màu chuyên nghiệp, KPI card, section header, theme cho biểu đồ.
-Tự động đồng bộ với chế độ Sáng/Tối của Streamlit (Settings → Theme).
+Enterprise ERP Design System — Industrial Light theme.
+Sidebar tối tương phản cao, nội dung chính sáng chuyên nghiệp.
+Không có dark mode toggle — một giao diện duy nhất, ổn định.
 """
 import streamlit as st
 
 # ════════════════════════════════════════════════════════════
-# THEME PALETTES
+# PALETTE — Industrial Enterprise Light
 # ════════════════════════════════════════════════════════════
 
-_LIGHT = {
-    "bg":            "#F4F6FB",
-    "surface":       "#FFFFFF",
-    "surface_2":     "#F8FAFD",
-    "border":        "#E4E9F2",
-    "border_strong": "#CBD5E1",
-    "text":          "#0D1A2B",
-    "text_dim":      "#5C6B82",
-    "text_faint":    "#8A98AD",
-    "brand":         "#2B59E0",
-    "brand_deep":    "#1E40C4",
-    "brand_soft":    "#EAF0FF",
-    "accent":        "#6366F1",
-    "pos":           "#0E9F6E",
-    "pos_soft":      "#DEF7EC",
-    "neg":           "#E02424",
-    "neg_soft":      "#FDE8E8",
-    "warn":          "#C27803",
-    "warn_soft":     "#FDF6B2",
-    "grid":          "#E8EDF5",
-    "shadow":        "0 1px 2px rgba(16,30,54,.05), 0 8px 28px rgba(16,30,54,.06)",
-    "shadow_hover":  "0 2px 6px rgba(43,89,224,.12), 0 14px 34px rgba(43,89,224,.14)",
-}
-
-_DARK = {
-    "bg":            "#0B1220",
-    "surface":       "#141E30",
-    "surface_2":     "#1B2840",
-    "border":        "#243353",
-    "border_strong": "#33476E",
-    "text":          "#E8EEF8",
-    "text_dim":      "#9FB0CC",
-    "text_faint":    "#6B7C9B",
-    "brand":         "#5B8DEF",
-    "brand_deep":    "#4F7BE0",
-    "brand_soft":    "#18243B",
-    "accent":        "#818CF8",
-    "pos":           "#34D399",
-    "pos_soft":      "rgba(52,211,153,.14)",
-    "neg":           "#F87171",
-    "neg_soft":      "rgba(248,113,113,.14)",
-    "warn":          "#FBBF24",
-    "warn_soft":     "rgba(251,191,36,.14)",
-    "grid":          "#22314E",
-    "shadow":        "0 1px 2px rgba(0,0,0,.45), 0 10px 30px rgba(0,0,0,.4)",
-    "shadow_hover":  "0 2px 8px rgba(0,0,0,.5), 0 16px 38px rgba(0,0,0,.5)",
+_P = {
+    # Backgrounds
+    "bg":            "#F4F6F9",   # Main canvas
+    "surface":       "#FFFFFF",   # Cards / tables
+    "surface_2":     "#F8FAFC",   # Nested / input bg
+    # Borders
+    "border":        "#E2E8F0",   # Standard (SAP-style gridlines)
+    "border_strong": "#CBD5E1",   # Stronger border
+    # Text
+    "text":          "#1E293B",   # Primary (Slate 800)
+    "text_dim":      "#64748B",   # Secondary (Slate 500)
+    "text_faint":    "#94A3B8",   # Placeholder / faint (Slate 400)
+    # Brand / actions
+    "brand":         "#0284C7",   # Industrial Blue
+    "brand_deep":    "#0369A1",
+    "brand_soft":    "#E0F2FE",   # Light tint
+    "accent":        "#0EA5E9",
+    # Status
+    "pos":           "#059669",
+    "pos_soft":      "#D1FAE5",
+    "neg":           "#DC2626",
+    "neg_soft":      "#FEE2E2",
+    "warn":          "#D97706",
+    "warn_soft":     "#FEF3C7",
+    # Chart
+    "grid":          "#E2E8F0",
+    # Shadows (ERP — cực nhẹ, không dày)
+    "shadow":        "0 1px 3px rgba(15,23,42,.07), 0 1px 2px rgba(15,23,42,.04)",
+    "shadow_hover":  "0 4px 12px rgba(2,132,199,.10), 0 2px 4px rgba(2,132,199,.06)",
 }
 
 
 def get_theme() -> str:
-    """'light' | 'dark' — ưu tiên override từ sidebar toggle, fallback Streamlit native."""
-    override = st.session_state.get("_theme_override")
-    if override in ("light", "dark"):
-        return override
-    try:
-        t = st.context.theme.type
-        return t if t in ("light", "dark") else "light"
-    except Exception:
-        return "light"
+    return "light"
 
 
 def palette() -> dict:
-    return _DARK if get_theme() == "dark" else _LIGHT
+    return _P
 
 
 # ════════════════════════════════════════════════════════════
@@ -78,405 +54,241 @@ def palette() -> dict:
 # ════════════════════════════════════════════════════════════
 
 def inject_global_css() -> None:
-    p = palette()
-    theme = get_theme()
+    p = _P
     vars_block = "\n".join(f"    --{k.replace('_','-')}: {v};" for k, v in p.items())
-
-    # Map our palette to Streamlit's own CSS variable names so native components pick them up
-    _sl_bg   = p["bg"]
-    _sl_surf = p["surface_2"]
-    _sl_text = p["text"]
-    _sl_pri  = p["brand"]
 
     st.markdown(f"""<style>
 :root {{
 {vars_block}
-    --background-color: {_sl_bg};
-    --secondary-background-color: {_sl_surf};
-    --text-color: {_sl_text};
-    --primary-color: {_sl_pri};
+    --background-color:           {p['bg']};
+    --secondary-background-color: {p['surface']};
+    --text-color:                 {p['text']};
+    --primary-color:              {p['brand']};
 }}
 
 /* ── Typography ──────────────────────────────────────────── */
 html, body, [class*="css"] {{
-    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif !important;
+    font-family: 'Inter', 'Roboto', 'Segoe UI', -apple-system, sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
 }}
 
 /* ── App canvas ──────────────────────────────────────────── */
-.stApp {{ background: var(--bg) !important; }}
+.stApp {{ background: {p['bg']} !important; color: {p['text']} !important; }}
 .main .block-container {{
-    padding: 1.6rem 2.4rem 3rem !important;
-    max-width: 1480px !important;
+    padding: 1.2rem 2rem 2.5rem !important;
+    max-width: 1520px !important;
 }}
-.main [data-testid="stMarkdownContainer"] p,
-.main [data-testid="stMarkdownContainer"] li {{ color: var(--text); }}
-.main h1, .main h2, .main h3, .main h4 {{ color: var(--text); }}
+
+/* ── Text normalization ──────────────────────────────────── */
+.stApp p, .stApp li {{ color: {p['text']} !important; }}
+.stApp [data-testid="stMarkdownContainer"] p  {{ color: {p['text']} !important; }}
+.stApp [data-testid="stMarkdownContainer"] li {{ color: {p['text']} !important; }}
+.stApp [data-testid="stMarkdownContainer"] span {{ color: {p['text']}; }}
+.stApp [data-testid="stCaptionContainer"],
+.stApp [data-testid="stCaptionContainer"] * {{
+    color: {p['text_faint']} !important; font-size:.77rem !important; }}
+.stApp h1, .stApp h2, .stApp h3 {{ color: {p['text']} !important; font-weight:700 !important; }}
+.stApp h4, .stApp h5 {{
+    color: {p['text_dim']} !important; font-size:.76rem !important;
+    text-transform: uppercase; letter-spacing:.9px !important; font-weight:700 !important; }}
+.stApp .main h3 {{
+    font-size: 1rem !important; font-weight:700 !important;
+    color: {p['text']} !important; margin: 1.2rem 0 .5rem !important; }}
 
 /* ── Page header ─────────────────────────────────────────── */
 .ph-wrap {{
     display:flex; align-items:flex-end; justify-content:space-between;
-    margin-bottom: 1.4rem; padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    margin-bottom:1rem; padding-bottom:.75rem;
+    border-bottom:2px solid {p['border']};
 }}
-.ph-title {{ font-size: 1.5rem; font-weight: 800; color: var(--text); margin: 0; letter-spacing:-.4px; line-height:1.2; }}
-.ph-sub {{ font-size: .85rem; color: var(--text-dim); margin: .3rem 0 0; }}
+.ph-title {{ font-size:1.25rem; font-weight:700; color:{p['text']}; margin:0;
+    letter-spacing:-.3px; line-height:1.2; }}
+.ph-sub {{ font-size:.78rem; color:{p['text_dim']}; margin:.2rem 0 0; }}
 
 /* ── Section header ──────────────────────────────────────── */
-.sec-head {{ display:flex; align-items:center; gap:.6rem; margin: 1.5rem 0 .9rem; }}
-.sec-head::before {{ content:""; width:4px; height:18px; border-radius:3px;
-    background: linear-gradient(180deg, var(--brand), var(--accent)); }}
-.sec-title {{ font-size: 1.02rem; font-weight: 700; color: var(--text); letter-spacing:-.2px; }}
-.sec-sub {{ font-size: .78rem; color: var(--text-faint); margin-left:.35rem; }}
+.sec-head {{ display:flex; align-items:center; gap:.5rem; margin:1.1rem 0 .65rem; }}
+.sec-head::before {{ content:""; width:3px; height:15px; border-radius:2px;
+    background:{p['brand']}; }}
+.sec-title {{ font-size:.93rem; font-weight:600; color:{p['text']}; letter-spacing:-.1px; }}
+.sec-sub {{ font-size:.74rem; color:{p['text_faint']}; margin-left:.3rem; }}
 
-/* ── KPI cards ───────────────────────────────────────────── */
-.kpi-grid {{ display:grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
-    gap: .85rem; margin: .25rem 0 .5rem; }}
+/* ── KPI cards — compact ERP ─────────────────────────────── */
+.kpi-grid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+    gap:.55rem; margin:.15rem 0 .5rem; }}
 .kpi {{
-    position:relative; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 14px;
-    padding: 1.05rem 1.15rem 1rem; box-shadow: var(--shadow);
-    transition: transform .16s ease, box-shadow .16s ease; overflow:hidden;
+    position:relative; background:{p['surface']};
+    border:1px solid {p['border']}; border-radius:5px;
+    padding:.8rem .95rem; box-shadow:{p['shadow']};
+    transition:box-shadow .12s ease; overflow:hidden;
 }}
 .kpi::before {{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
-    background: linear-gradient(180deg, var(--brand), var(--accent)); opacity:.85; }}
-.kpi:hover {{ transform: translateY(-2px); box-shadow: var(--shadow-hover); }}
-.kpi-top {{ display:flex; align-items:center; gap:.5rem; margin-bottom:.55rem; }}
-.kpi-ico {{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center;
-    justify-content:center; font-size:15px; background: var(--brand-soft); flex-shrink:0; }}
-.kpi-label {{ font-size:.685rem; font-weight:700; color: var(--text-dim);
+    background:{p['brand']}; }}
+.kpi:hover {{ box-shadow:{p['shadow_hover']}; }}
+.kpi-top {{ display:flex; align-items:center; gap:.4rem; margin-bottom:.35rem; }}
+.kpi-ico {{ width:24px; height:24px; border-radius:4px; display:flex; align-items:center;
+    justify-content:center; font-size:12px; background:{p['brand_soft']}; flex-shrink:0; }}
+.kpi-label {{ font-size:.63rem; font-weight:700; color:{p['text_dim']};
     text-transform:uppercase; letter-spacing:.7px; line-height:1.1; }}
-.kpi-value {{ font-size:1.62rem; font-weight:800; color: var(--text); line-height:1.05;
-    letter-spacing:-.6px; }}
-.kpi-delta {{ font-size:.74rem; font-weight:600; margin-top:.4rem; display:flex;
-    align-items:center; gap:.3rem; }}
-.kpi-delta.pos {{ color: var(--pos); }}
-.kpi-delta.neg {{ color: var(--neg); }}
-.kpi-delta.neutral {{ color: var(--text-faint); }}
-.kpi-foot {{ color: var(--text-faint); font-weight:500; }}
+.kpi-value {{ font-size:1.42rem; font-weight:700; color:{p['text']}; line-height:1.05;
+    letter-spacing:-.4px; }}
+.kpi-delta {{ font-size:.68rem; font-weight:600; margin-top:.25rem; display:flex;
+    align-items:center; gap:.25rem; }}
+.kpi-delta.pos {{ color:{p['pos']}; }}
+.kpi-delta.neg {{ color:{p['neg']}; }}
+.kpi-delta.neutral {{ color:{p['text_faint']}; }}
+.kpi-foot {{ color:{p['text_faint']}; font-weight:500; }}
 
 /* ── Metric (native) ─────────────────────────────────────── */
 div[data-testid="stMetric"], div[data-testid="metric-container"] {{
-    background: var(--surface) !important; border:1px solid var(--border) !important;
-    border-radius:14px !important; padding:1rem 1.25rem !important; box-shadow: var(--shadow) !important;
-}}
-[data-testid="stMetricLabel"] p {{ color: var(--text-dim) !important; font-weight:600 !important;
-    font-size:.72rem !important; text-transform:uppercase; letter-spacing:.5px; }}
-[data-testid="stMetricValue"] {{ color: var(--text) !important; font-weight:800 !important; }}
+    background:{p['surface']} !important; border:1px solid {p['border']} !important;
+    border-radius:5px !important; padding:.8rem 1rem !important;
+    box-shadow:{p['shadow']} !important; }}
+[data-testid="stMetricLabel"] p {{ color:{p['text_dim']} !important; font-weight:600 !important;
+    font-size:.67rem !important; text-transform:uppercase; letter-spacing:.6px; }}
+[data-testid="stMetricValue"] {{ color:{p['text']} !important; font-weight:700 !important; }}
 
-/* ── Buttons ─────────────────────────────────────────────── */
-.main .stButton > button, .main .stDownloadButton > button {{
-    border-radius:10px !important; font-weight:600 !important; font-size:.85rem !important;
-    transition: all .16s !important; border:1px solid var(--border-strong) !important;
-    background: var(--surface) !important; color: var(--text) !important;
-}}
-.main .stButton > button:hover, .main .stDownloadButton > button:hover {{
-    border-color: var(--brand) !important; color: var(--brand) !important; }}
-.main .stButton > button[kind="primary"] {{
-    background: linear-gradient(135deg, var(--brand), var(--brand-deep)) !important;
-    color:#fff !important; border:none !important;
-    box-shadow: 0 2px 10px rgba(43,89,224,.32) !important; }}
-.main .stButton > button[kind="primary"]:hover {{ transform: translateY(-1px) !important;
-    box-shadow: 0 6px 18px rgba(43,89,224,.42) !important; color:#fff !important; }}
+/* ── Buttons — ERP flat ──────────────────────────────────── */
+.stApp .stButton > button, .stApp .stDownloadButton > button {{
+    border-radius:5px !important; font-weight:500 !important; font-size:.83rem !important;
+    transition:all .12s !important; border:1px solid {p['border_strong']} !important;
+    background:{p['surface']} !important; color:{p['text']} !important;
+    padding:.32rem .85rem !important; box-shadow:none !important; }}
+.stApp .stButton > button:hover, .stApp .stDownloadButton > button:hover {{
+    border-color:{p['brand']} !important; color:{p['brand']} !important;
+    background:{p['brand_soft']} !important; }}
+.stApp .stButton > button[kind="primary"] {{
+    background:{p['brand']} !important; color:#fff !important;
+    border:none !important; box-shadow:none !important; }}
+.stApp .stButton > button[kind="primary"]:hover {{
+    background:{p['brand_deep']} !important; color:#fff !important; }}
 
-/* ── Tabs ────────────────────────────────────────────────── */
-.stTabs [data-baseweb="tab-list"] {{ gap:.25rem !important; border-bottom:1px solid var(--border) !important; }}
-.stTabs [data-baseweb="tab"] {{ font-size:.84rem !important; font-weight:600 !important;
-    color: var(--text-dim) !important; padding:.6rem .95rem !important;
-    border-radius:9px 9px 0 0 !important; }}
-.stTabs [aria-selected="true"] {{ color: var(--brand) !important;
-    border-bottom:2px solid var(--brand) !important; }}
-
-/* ── Section h3/h4 ───────────────────────────────────────── */
-.stApp .main h3 {{ font-size:1.08rem !important; font-weight:700 !important;
-    color:var(--text) !important; margin:1.4rem 0 .6rem !important; letter-spacing:-.2px !important; }}
-.stApp .main h4 {{ font-size:.82rem !important; font-weight:700 !important;
-    color:var(--text) !important; margin:1.1rem 0 .5rem !important;
-    text-transform:uppercase; letter-spacing:.9px !important; }}
-
-/* ── General text color (dark mode fix) ──────────────────── */
-.stApp .main p {{ color: var(--text) !important; }}
-.stApp .main li {{ color: var(--text) !important; }}
-.stApp .main [data-testid="stMarkdownContainer"] * {{ color: var(--text); }}
-.stApp .main [data-testid="stMarkdownContainer"] code {{ color: var(--brand) !important; }}
-.stApp .main [data-testid="stCaptionContainer"] * {{ color: var(--text-faint) !important; }}
+/* ── Tabs — ERP underline style ──────────────────────────── */
+.stTabs [data-baseweb="tab-list"] {{
+    gap:0 !important; border-bottom:1px solid {p['border']} !important;
+    background:{p['surface']} !important; }}
+.stTabs [data-baseweb="tab"] {{
+    font-size:.81rem !important; font-weight:500 !important;
+    color:{p['text_dim']} !important; padding:.52rem .85rem !important;
+    border-radius:0 !important; border-bottom:2px solid transparent !important; }}
+.stTabs [aria-selected="true"] {{
+    color:{p['brand']} !important; border-bottom:2px solid {p['brand']} !important;
+    font-weight:600 !important; background:{p['brand_soft']} !important; }}
 
 /* ── Inline code ─────────────────────────────────────────── */
-code {{ background: var(--brand-soft) !important; color: var(--brand) !important;
-    border: 1px solid var(--border) !important; border-radius:5px !important;
-    padding: 1px 6px !important; font-size:.82em !important; }}
+code {{ background:{p['brand_soft']} !important; color:{p['brand']} !important;
+    border:1px solid {p['border']} !important; border-radius:3px !important;
+    padding:1px 5px !important; font-size:.82em !important; }}
 
 /* ── Labels ──────────────────────────────────────────────── */
-.stApp .stTextInput label, .stApp .stSelectbox label, .stApp .stNumberInput label,
-.stApp .stPasswordInput label, .stApp .stTextArea label, .stApp .stFileUploader label {{
-    color: var(--text-dim) !important; font-size:.8rem !important;
-    font-weight:600 !important; letter-spacing:.15px !important; }}
+.stApp label {{ color:{p['text_dim']} !important; font-size:.79rem !important;
+    font-weight:600 !important; letter-spacing:.1px !important; }}
 
 /* ── Inputs / textarea ───────────────────────────────────── */
-.stApp [data-baseweb="input"] {{
-    background: var(--surface-2) !important;
-    border-color: var(--border-strong) !important; border-radius:9px !important; }}
-.stApp [data-baseweb="input"]:focus-within {{
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 2px rgba(91,141,239,.18) !important; }}
-.stApp [data-baseweb="input"] input {{ color: var(--text) !important; background:transparent !important; }}
-.stApp [data-baseweb="input"] input::placeholder {{ color: var(--text-faint) !important; }}
-.stApp [data-baseweb="textarea"] {{
-    background: var(--surface-2) !important; border-color: var(--border-strong) !important;
-    border-radius:9px !important; }}
-.stApp [data-baseweb="textarea"] textarea {{ color: var(--text) !important; background:transparent !important; }}
-
-/* ── Selectbox ───────────────────────────────────────────── */
-.stApp [data-baseweb="select"] > div:first-child {{
-    background: var(--surface-2) !important; border-color: var(--border-strong) !important;
-    border-radius:9px !important; }}
-.stApp [data-baseweb="select"] [data-value], .stApp [data-baseweb="select"] span {{
-    color: var(--text) !important; }}
-.stApp [data-baseweb="popover"] {{ background: var(--surface) !important;
-    border: 1px solid var(--border) !important; box-shadow: var(--shadow) !important;
-    border-radius:10px !important; }}
-.stApp [data-baseweb="menu"] {{ background: var(--surface) !important; border-radius:10px !important; }}
-.stApp [data-baseweb="option"] {{ background: var(--surface) !important; color: var(--text) !important; }}
-.stApp [data-baseweb="option"]:hover {{ background: var(--brand-soft) !important; color: var(--brand) !important; }}
-
-/* ── File uploader ───────────────────────────────────────── */
-.stApp [data-testid="stFileUploader"] {{ border-radius:12px !important; }}
-.stApp [data-testid="stFileUploadDropzone"],
-.stApp .stFileUploader > div > div,
-.stApp .stFileUploader section {{
-    background: var(--surface-2) !important;
-    border: 2px dashed var(--border-strong) !important;
-    border-radius:12px !important; }}
-.stApp [data-testid="stFileUploadDropzone"]:hover,
-.stApp .stFileUploader section:hover {{
-    border-color: var(--brand) !important;
-    background: var(--brand-soft) !important; }}
-.stApp [data-testid="stFileUploadDropzone"] p,
-.stApp [data-testid="stFileUploadDropzone"] small,
-.stApp [data-testid="stFileUploadDropzone"] span {{ color: var(--text-dim) !important; }}
-.stApp [data-testid="stFileUploadDropzone"] button {{
-    background: var(--surface) !important; color: var(--brand) !important;
-    border: 1px solid var(--border-strong) !important; border-radius:8px !important; }}
-
-/* ── Form container ──────────────────────────────────────── */
-.stApp [data-testid="stForm"],
-.stApp .stForm {{
-    background: var(--surface-2) !important;
-    border: 1px solid var(--border) !important; border-radius:14px !important;
-    padding: 1.2rem 1.4rem 1rem !important; }}
-
-/* ── Expander ────────────────────────────────────────────── */
-.stApp [data-testid="stExpander"] {{ border:1px solid var(--border) !important;
-    border-radius:12px !important; background: var(--surface) !important; overflow:hidden !important; }}
-.stApp [data-testid="stExpander"] summary {{
-    color: var(--text) !important; font-weight:600 !important; font-size:.88rem !important; }}
-.stApp [data-testid="stExpander"] summary:hover {{ background: var(--brand-soft) !important; }}
-.stApp [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {{
-    color: var(--text) !important; }}
-
-/* ── DataFrame ───────────────────────────────────────────── */
-.stApp [data-testid="stDataFrame"] {{ border:1px solid var(--border) !important;
-    border-radius:12px !important; overflow:hidden !important; box-shadow: var(--shadow) !important; }}
-
-/* ── Uploaded file badge ─────────────────────────────────── */
-.stApp [data-testid="stFileUploaderFile"] {{
-    background: var(--surface) !important; border: 1px solid var(--border) !important;
-    border-radius:8px !important; }}
-.stApp [data-testid="stFileUploaderFile"] span {{ color: var(--text) !important; }}
-
-/* ── Divider ─────────────────────────────────────────────── */
-hr {{ border-color: var(--border) !important; margin:1.2rem 0 !important; }}
-
-/* ── Chart card ──────────────────────────────────────────── */
-[data-testid="stVegaLiteChart"], .stVegaLiteChart {{
-    background: var(--surface); border:1px solid var(--border); border-radius:14px;
-    padding:.65rem .4rem .2rem; box-shadow: var(--shadow); }}
-</style>""", unsafe_allow_html=True)
-
-    # ── Dark mode hard override (native Streamlit components) ─────────────
-    if theme == "dark":
-        D = _DARK
-        st.markdown(f"""<style>
-/* ─────────────────────────────────────────────────
-   DARK OVERRIDE — bắt buộc tất cả native component
-   dùng bảng màu tối, vì Streamlit internal theme
-   vẫn là light khi dùng custom toggle
-───────────────────────────────────────────────── */
-
-/* Page & main area */
-.stApp, .stApp > .stAppViewContainer, .stApp .main,
-.stApp .main .block-container,
-.stApp [data-testid="stAppViewBlockContainer"] {{
-    background-color: {D['bg']} !important;
-    color: {D['text']} !important;
-}}
-
-/* ALL text elements */
-.stApp p, .stApp li, .stApp td, .stApp th,
-.stApp [data-testid="stMarkdownContainer"],
-.stApp [data-testid="stMarkdownContainer"] p,
-.stApp [data-testid="stMarkdownContainer"] li,
-.stApp [data-testid="stMarkdownContainer"] span,
-.stApp .element-container p,
-.stApp .stText, .stApp .stWrite {{
-    color: {D['text']} !important;
-}}
-.stApp [data-testid="stCaptionContainer"],
-.stApp [data-testid="stCaptionContainer"] * {{
-    color: {D['text_faint']} !important;
-}}
-.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5 {{
-    color: {D['text']} !important;
-}}
-
-/* Form container */
-.stApp [data-testid="stForm"],
-.stApp .stForm,
-.stApp [data-testid="stForm"] > div {{
-    background-color: {D['surface_2']} !important;
-    border: 1px solid {D['border']} !important;
-    border-radius: 14px !important;
-}}
-
-/* Text / password / number inputs — target mọi wrapper layer */
 .stApp [data-baseweb="input"],
 .stApp [data-baseweb="base-input"],
 .stApp [data-baseweb="input"] > div,
+.stApp [data-baseweb="textarea"],
 .stApp .stTextInput > div > div,
 .stApp .stPasswordInput > div > div,
 .stApp .stNumberInput > div > div {{
-    background-color: {D['surface_2']} !important;
-    border-color: {D['border_strong']} !important;
-}}
-.stApp [data-baseweb="input"] input,
-.stApp [data-baseweb="base-input"] input,
-.stApp [data-baseweb="textarea"] textarea {{
-    color: {D['text']} !important;
-    background-color: transparent !important;
-    caret-color: {D['brand']} !important;
-}}
-.stApp [data-baseweb="input"] input::placeholder,
-.stApp [data-baseweb="base-input"] input::placeholder,
-.stApp [data-baseweb="textarea"] textarea::placeholder {{
-    color: {D['text_faint']} !important;
-}}
-.stApp [data-baseweb="textarea"],
-.stApp .stTextArea > div > div {{
-    background-color: {D['surface_2']} !important;
-    border-color: {D['border_strong']} !important;
-}}
+    background:{p['surface']} !important;
+    border-color:{p['border_strong']} !important; border-radius:5px !important; }}
+.stApp [data-baseweb="input"]:focus-within,
+.stApp [data-baseweb="textarea"]:focus-within {{
+    border-color:{p['brand']} !important;
+    box-shadow:0 0 0 2px rgba(2,132,199,.14) !important; }}
+.stApp [data-baseweb="input"] input {{ color:{p['text']} !important; }}
+.stApp [data-baseweb="input"] input::placeholder {{ color:{p['text_faint']} !important; }}
+.stApp [data-baseweb="textarea"] textarea {{ color:{p['text']} !important; }}
+.stApp [data-baseweb="textarea"] textarea::placeholder {{ color:{p['text_faint']} !important; }}
 
-/* Selectbox — target tất cả div con */
+/* ── Selectbox ───────────────────────────────────────────── */
 .stApp [data-baseweb="select"],
 .stApp [data-baseweb="select"] > div,
 .stApp [data-baseweb="select"] > div > div,
 .stApp .stSelectbox > div > div {{
-    background-color: {D['surface_2']} !important;
-    border-color: {D['border_strong']} !important;
-}}
+    background:{p['surface']} !important;
+    border-color:{p['border_strong']} !important; border-radius:5px !important; }}
 .stApp [data-baseweb="select"] [data-value],
 .stApp [data-baseweb="select"] input,
-.stApp [data-baseweb="select"] span,
-.stApp [data-baseweb="select"] [aria-selected] {{
-    color: {D['text']} !important;
-}}
-.stApp [data-baseweb="select"] svg,
-.stApp [data-baseweb="select"] svg path {{
-    fill: {D['text_dim']} !important;
-}}
-
-/* Selectbox dropdown panel */
+.stApp [data-baseweb="select"] span {{ color:{p['text']} !important; }}
+.stApp [data-baseweb="select"] svg path {{ fill:{p['text_dim']} !important; }}
 .stApp [data-baseweb="popover"],
 .stApp [data-baseweb="menu"] {{
-    background-color: {D['surface']} !important;
-    border: 1px solid {D['border']} !important;
-    box-shadow: {D['shadow']} !important;
-}}
+    background:{p['surface']} !important; border:1px solid {p['border']} !important;
+    box-shadow:{p['shadow_hover']} !important; border-radius:5px !important; }}
 .stApp [data-baseweb="option"] {{
-    background-color: {D['surface']} !important;
-    color: {D['text']} !important;
-}}
+    background:{p['surface']} !important; color:{p['text']} !important;
+    font-size:.83rem !important; }}
 .stApp [data-baseweb="option"]:hover,
 .stApp [data-baseweb="option"][aria-selected="true"] {{
-    background-color: {D['brand_soft']} !important;
-    color: {D['brand']} !important;
-}}
+    background:{p['brand_soft']} !important; color:{p['brand']} !important; }}
 
-/* File uploader dropzone */
+/* ── File uploader ───────────────────────────────────────── */
 .stApp [data-testid="stFileUploadDropzone"],
 .stApp .stFileUploader section,
 .stApp .stFileUploader > div > div {{
-    background-color: {D['surface_2']} !important;
-    border: 2px dashed {D['border_strong']} !important;
-    border-radius: 12px !important;
-}}
+    background:{p['surface_2']} !important;
+    border:1px dashed {p['border_strong']} !important; border-radius:6px !important; }}
 .stApp [data-testid="stFileUploadDropzone"] p,
 .stApp [data-testid="stFileUploadDropzone"] span,
-.stApp [data-testid="stFileUploadDropzone"] small {{
-    color: {D['text_dim']} !important;
-}}
-/* Browse files button */
+.stApp [data-testid="stFileUploadDropzone"] small {{ color:{p['text_dim']} !important; font-size:.82rem !important; }}
 .stApp [data-testid="stFileUploadDropzone"] button,
-.stApp [data-testid="stFileUploadDropzone"] > div button,
 .stApp .stFileUploader button {{
-    background-color: {D['surface']} !important;
-    color: {D['brand']} !important;
-    border: 1px solid {D['border_strong']} !important;
-    border-radius: 8px !important;
-}}
-.stApp [data-testid="stFileUploadDropzone"] button:hover,
-.stApp .stFileUploader button:hover {{
-    background-color: {D['brand_soft']} !important;
-    color: {D['brand']} !important;
-}}
+    background:{p['surface']} !important; color:{p['brand']} !important;
+    border:1px solid {p['brand']} !important; border-radius:5px !important;
+    font-size:.82rem !important; font-weight:500 !important; }}
 .stApp [data-testid="stFileUploaderFile"] {{
-    background-color: {D['surface']} !important;
-    border: 1px solid {D['border']} !important;
-    border-radius: 8px !important;
-}}
-.stApp [data-testid="stFileUploaderFile"] * {{ color: {D['text_dim']} !important; }}
+    background:{p['surface']} !important; border:1px solid {p['border']} !important;
+    border-radius:5px !important; }}
+.stApp [data-testid="stFileUploaderFile"] * {{ color:{p['text_dim']} !important; }}
 
-/* Expander */
+/* ── Form container ──────────────────────────────────────── */
+.stApp [data-testid="stForm"],
+.stApp .stForm,
+.stApp [data-testid="stForm"] > div {{
+    background:{p['surface']} !important; border:1px solid {p['border']} !important;
+    border-radius:6px !important; padding:1rem 1.2rem !important; }}
+
+/* ── Expander ────────────────────────────────────────────── */
 .stApp [data-testid="stExpander"] {{
-    background-color: {D['surface']} !important;
-    border: 1px solid {D['border']} !important;
-    border-radius: 12px !important;
-}}
-.stApp [data-testid="stExpander"] summary,
-.stApp [data-testid="stExpander"] summary * {{
-    color: {D['text']} !important;
-}}
+    border:1px solid {p['border']} !important; border-radius:6px !important;
+    background:{p['surface']} !important; }}
+.stApp [data-testid="stExpander"] summary {{
+    color:{p['text']} !important; font-weight:600 !important;
+    font-size:.84rem !important; padding:.55rem .85rem !important; }}
+.stApp [data-testid="stExpander"] summary:hover {{ background:{p['surface_2']} !important; }}
 .stApp [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {{
-    color: {D['text']} !important;
-}}
+    color:{p['text']} !important; }}
 
-/* Alert boxes */
-.stApp [data-testid="stAlert"],
-.stApp [data-testid="stNotification"] {{
-    background-color: {D['surface']} !important;
-}}
+/* ── DataFrame ───────────────────────────────────────────── */
+.stApp [data-testid="stDataFrame"] {{
+    border:1px solid {p['border']} !important; border-radius:5px !important;
+    overflow:hidden !important; box-shadow:{p['shadow']} !important; }}
 
-/* Labels */
-.stApp label, .stApp .stTextInput label,
-.stApp .stSelectbox label, .stApp .stFileUploader label,
-.stApp .stNumberInput label, .stApp .stPasswordInput label {{
-    color: {D['text_dim']} !important;
-}}
+/* ── Alerts ──────────────────────────────────────────────── */
+.stApp .stAlert {{ border-radius:5px !important; border-left-width:3px !important; }}
+.stApp [data-testid="stAlert"] {{ border-radius:5px !important; }}
 
-/* Popover */
+/* ── Divider ─────────────────────────────────────────────── */
+hr {{ border-color:{p['border']} !important; margin:1rem 0 !important; }}
+
+/* ── Popover ─────────────────────────────────────────────── */
 .stApp [data-testid="stPopover"],
 .stApp [data-testid="stPopover"] > div {{
-    background-color: {D['surface']} !important;
-    border: 1px solid {D['border']} !important;
-    border-radius: 12px !important;
-}}
-.stApp [data-testid="stPopover"] p {{ color: {D['text']} !important; }}
+    background:{p['surface']} !important; border:1px solid {p['border']} !important;
+    border-radius:6px !important; box-shadow:{p['shadow_hover']} !important; }}
+.stApp [data-testid="stPopover"] p {{ color:{p['text']} !important; }}
 
-/* Number input buttons */
+/* ── Number input ────────────────────────────────────────── */
 .stApp [data-testid="stNumberInput"] button {{
-    background-color: {D['surface_2']} !important;
-    color: {D['text_dim']} !important;
-    border-color: {D['border']} !important;
-}}
+    background:{p['surface_2']} !important; color:{p['text_dim']} !important;
+    border-color:{p['border']} !important; border-radius:4px !important; }}
+
+/* ── Chart card ──────────────────────────────────────────── */
+[data-testid="stVegaLiteChart"], .stVegaLiteChart {{
+    background:{p['surface']}; border:1px solid {p['border']}; border-radius:5px;
+    padding:.45rem .3rem .1rem; box-shadow:{p['shadow']}; }}
 </style>""", unsafe_allow_html=True)
 
 
@@ -491,9 +303,8 @@ def section(title: str, sub: str = "") -> None:
 
 
 def kpi_cards(cards: list[dict]) -> None:
-    """
-    cards: list of dict(label, value, icon='', delta='', tone='neutral'|'pos'|'neg', foot='')
-    """
+    """cards: list of dict(label, value, icon='', delta='', tone='neutral'|'pos'|'neg', foot='')"""
+    p = _P
     items = []
     for c in cards:
         ico = f'<span class="kpi-ico">{c.get("icon","")}</span>' if c.get("icon") else ""
@@ -518,7 +329,7 @@ def kpi_cards(cards: list[dict]) -> None:
 # ════════════════════════════════════════════════════════════
 
 def chart_colors() -> dict:
-    p = palette()
+    p = _P
     return {
         "brand": p["brand"], "accent": p["accent"],
         "pos": p["pos"], "neg": p["neg"], "warn": p["warn"],
@@ -527,7 +338,7 @@ def chart_colors() -> dict:
 
 
 def style_chart(ch):
-    """Áp theme thống nhất cho mọi biểu đồ Altair."""
+    """Áp ERP theme thống nhất cho mọi biểu đồ Altair."""
     c = chart_colors()
     return (
         ch.configure(background="transparent")
