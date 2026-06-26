@@ -171,9 +171,11 @@ div[data-testid="stMetric"], div[data-testid="metric-container"] {{
 .stTabs [data-baseweb="tab-list"] {{ gap:.25rem !important; border-bottom:1px solid var(--border) !important; }}
 .stTabs [data-baseweb="tab"] {{ font-size:.84rem !important; font-weight:600 !important;
     color: var(--text-dim) !important; padding:.6rem .95rem !important;
-    border-radius:9px 9px 0 0 !important; }}
+    border-radius:9px 9px 0 0 !important;
+    filter: grayscale(1) opacity(.65) !important; }}
 .stTabs [aria-selected="true"] {{ color: var(--brand) !important;
-    border-bottom:2px solid var(--brand) !important; }}
+    border-bottom:2px solid var(--brand) !important;
+    filter: grayscale(1) opacity(1) brightness(.55) !important; }}
 
 /* ── Inputs / selects ────────────────────────────────────── */
 [data-testid="stDataFrame"] {{ border:1px solid var(--border) !important; border-radius:12px !important;

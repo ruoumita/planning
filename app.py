@@ -48,14 +48,17 @@ section[data-testid="stSidebar"] > div:first-child {
     color:var(--text-dim) !important; font-size:.85rem !important; font-weight:500 !important;
     text-decoration:none !important; transition:all .15s ease !important;
     border-left:3px solid transparent !important;
+    filter: grayscale(1) opacity(.6) !important;
 }
 [data-testid="stSidebar"] .stPageLink a p,
 [data-testid="stSidebar"] .stPageLink a span { color:inherit !important; }
 [data-testid="stSidebar"] .stPageLink a:hover {
-    background:var(--brand-soft) !important; color:var(--text) !important; }
+    background:var(--brand-soft) !important; color:var(--text) !important;
+    filter: grayscale(1) opacity(.85) !important; }
 [data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
     background:var(--brand-soft) !important; color:var(--brand) !important;
-    border-left:3px solid var(--brand) !important; font-weight:600 !important; }
+    border-left:3px solid var(--brand) !important; font-weight:600 !important;
+    filter: grayscale(1) opacity(1) brightness(.5) !important; }
 [data-testid="stSidebar"] .stButton > button {
     font-size:.8rem !important; font-weight:600 !important; border-radius:9px !important;
     width:100% !important; background:rgba(239,68,68,0.1) !important; color:#DC2626 !important;
@@ -193,13 +196,13 @@ if not user:
     _, center, _ = st.columns([1, 1.2, 1])
     with center:
         _login_logo = (
-            f'<img src="{_LOGO_SRC}" style="width:80px;height:80px;border-radius:18px;'
-            f'object-fit:contain;background:#FFFFFF;padding:8px;margin-bottom:1rem;'
-            f'box-shadow:0 12px 36px rgba(91,141,239,0.28);" alt="MML">'
+            f'<img src="{_LOGO_SRC}" style="width:116px;height:116px;border-radius:22px;'
+            f'object-fit:contain;background:#FFFFFF;padding:10px;margin-bottom:1.2rem;'
+            f'box-shadow:0 16px 48px rgba(91,141,239,0.32);" alt="MML">'
             if _LOGO_SRC else
-            '<div style="width:64px;height:64px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);'
-            'border-radius:18px;display:inline-flex;align-items:center;justify-content:center;'
-            'font-size:32px;margin-bottom:1rem;box-shadow:0 10px 30px rgba(29,78,216,0.5);">📦</div>'
+            '<div style="width:90px;height:90px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);'
+            'border-radius:22px;display:inline-flex;align-items:center;justify-content:center;'
+            'font-size:44px;margin-bottom:1.2rem;box-shadow:0 14px 36px rgba(29,78,216,0.5);">📦</div>'
         )
         st.markdown(f"""
         <div style="text-align:center;margin-bottom:2rem;">
