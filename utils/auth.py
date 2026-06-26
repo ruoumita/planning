@@ -1,10 +1,21 @@
 """
-Xác thực người dùng (bcrypt) + helpers UI chung.
+Xác thực người dùng, session persistence, và helper authorization.
 """
 import bcrypt
+import json
+import secrets
+import time
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 import streamlit as st
+import streamlit.components.v1 as components
 from sqlalchemy import text
 from utils.database import get_engine
+
+_SESSION_FILE = Path(__file__).parent.parent / ".sessions.json"
+_COOKIE_NAME = "mml_session"
+_MAX_AGE_SEC = 30 * 24 * 3600  # 30 ngày
 
 
 # ────────────────────────────────────────────────────────────
@@ -26,7 +37,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 # Login / Logout
 # ────────────────────────────────────────────────────────────
 
-def authenticate(email: str, password: str) -> dict | None:
+def authenticate(email: str, password: str) -> Optional[dict]:
     """
     Xác thực email + password với bảng users.
     Trả về dict thông tin user nếu hợp lệ và is_active, ngược lại trả về None.
@@ -62,9 +73,21 @@ def authenticate(email: str, password: str) -> dict | None:
     }
 
 
+def _execute_transaction(statements: List[Tuple[str, dict]], success_msg: str) -> Tuple[bool, str]:
+    try:
+        engine = get_engine()
+        with engine.connect() as conn:
+            for sql, params in statements:
+                conn.execute(text(sql), params)
+            conn.commit()
+        return True, success_msg
+    except Exception as e:
+        return False, str(e)
+
+
 # ────────────────────────────────────────────────────────────
 # Session guards — dùng ở đầu mỗi trang
-# ────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────
 
 def require_auth() -> dict:
     """
@@ -78,7 +101,7 @@ def require_auth() -> dict:
     return st.session_state["user"]
 
 
-def require_system_role(user: dict, allowed: list[str]) -> None:
+def require_system_role(user: dict, allowed: List[str]) -> None:
     """Dừng execution nếu system_role không nằm trong allowed."""
     if user["system_role"] not in allowed:
         st.error("🚫 Bạn không có quyền truy cập chức năng này.")
@@ -94,22 +117,8 @@ def is_admin(user: dict) -> bool:
 
 
 
-def page_header(title: str, subtitle: str = "") -> None:
-    """Tiêu đề trang chuẩn — dùng ở đầu mỗi trang nội dung."""
-    sub_html = f'<p class="ph-sub">{subtitle}</p>' if subtitle else ""
-    st.markdown(f"""
-    <div class="ph-wrap">
-        <h1 class="ph-title">{title}</h1>
-        {sub_html}
-    </div>
-    """, unsafe_allow_html=True)
 
-
-# ────────────────────────────────────────────────────────────
-# User management (dùng trong trang Cài đặt)
-# ────────────────────────────────────────────────────────────
-
-def get_all_users() -> list[dict]:
+def get_all_users() -> List[dict]:
     engine = get_engine()
     with engine.connect() as conn:
         rows = conn.execute(text("""
@@ -127,7 +136,7 @@ def get_all_users() -> list[dict]:
 
 
 def create_user(email: str, full_name: str, plain_password: str,
-                business_role: str, system_role: str) -> tuple[bool, str]:
+                business_role: str, system_role: str) -> Tuple[bool, str]:
     try:
         engine = get_engine()
         with engine.connect() as conn:
@@ -148,66 +157,52 @@ def create_user(email: str, full_name: str, plain_password: str,
         return False, f"Lỗi: {e}"
 
 
-def toggle_user_active(user_id: int, is_active: bool) -> tuple[bool, str]:
-    try:
-        engine = get_engine()
-        with engine.connect() as conn:
-            conn.execute(text(
-                "UPDATE users SET is_active = :a WHERE id = :id"
-            ), {"a": is_active, "id": user_id})
-            conn.commit()
-        status = "kích hoạt" if is_active else "vô hiệu hóa"
-        return True, f"Đã {status} tài khoản."
-    except Exception as e:
-        return False, str(e)
+def toggle_user_active(user_id: int, is_active: bool) -> Tuple[bool, str]:
+    status = "kích hoạt" if is_active else "vô hiệu hóa"
+    success = _execute_transaction(
+        [(
+            "UPDATE users SET is_active = :a WHERE id = :id",
+            {"a": is_active, "id": user_id},
+        )],
+        f"Đã {status} tài khoản."
+    )
+    return success
 
 
-def change_system_role(user_id: int, new_role: str) -> tuple[bool, str]:
-    try:
-        engine = get_engine()
-        with engine.connect() as conn:
-            conn.execute(text(
-                "UPDATE users SET system_role = :r WHERE id = :id"
-            ), {"r": new_role, "id": user_id})
-            conn.commit()
-        return True, f"Đã cập nhật quyền thành {new_role}."
-    except Exception as e:
-        return False, str(e)
+def change_system_role(user_id: int, new_role: str) -> Tuple[bool, str]:
+    return _execute_transaction(
+        [(
+            "UPDATE users SET system_role = :r WHERE id = :id",
+            {"r": new_role, "id": user_id},
+        )],
+        f"Đã cập nhật quyền thành {new_role}."
+    )
 
 
-def transfer_admin(current_admin_id: int, new_admin_id: int) -> tuple[bool, str]:
+def transfer_admin(current_admin_id: int, new_admin_id: int) -> Tuple[bool, str]:
     """
     Chuyển quyền ADMIN sang user khác. Admin hiện tại trở thành MEMBER.
     """
-    try:
-        engine = get_engine()
-        with engine.connect() as conn:
-            conn.execute(text(
-                "UPDATE users SET system_role = 'MEMBER' WHERE id = :id"
-            ), {"id": current_admin_id})
-            conn.execute(text(
-                "UPDATE users SET system_role = 'ADMIN' WHERE id = :id"
-            ), {"id": new_admin_id})
-            conn.commit()
-        return True, "Đã chuyển quyền Admin thành công."
-    except Exception as e:
-        return False, str(e)
+    return _execute_transaction(
+        [
+            ("UPDATE users SET system_role = 'MEMBER' WHERE id = :id", {"id": current_admin_id}),
+            ("UPDATE users SET system_role = 'ADMIN' WHERE id = :id", {"id": new_admin_id}),
+        ],
+        "Đã chuyển quyền Admin thành công."
+    )
 
 
-def reset_user_password(user_id: int, new_plain: str) -> tuple[bool, str]:
-    try:
-        engine = get_engine()
-        with engine.connect() as conn:
-            conn.execute(text(
-                "UPDATE users SET password_hash = :h WHERE id = :id"
-            ), {"h": hash_password(new_plain), "id": user_id})
-            conn.commit()
-        return True, "Đã đặt lại mật khẩu."
-    except Exception as e:
-        return False, str(e)
+def reset_user_password(user_id: int, new_plain: str) -> Tuple[bool, str]:
+    return _execute_transaction(
+        [(
+            "UPDATE users SET password_hash = :h WHERE id = :id",
+            {"h": hash_password(new_plain), "id": user_id},
+        )],
+        "Đã đặt lại mật khẩu."
+    )
 
 
-def change_own_password(user_id: int, old_plain: str, new_plain: str) -> tuple[bool, str]:
+def change_own_password(user_id: int, old_plain: str, new_plain: str) -> Tuple[bool, str]:
     """Đổi mật khẩu cá nhân — kiểm tra mật khẩu cũ trước"""
     try:
         engine = get_engine()
@@ -223,6 +218,90 @@ def change_own_password(user_id: int, old_plain: str, new_plain: str) -> tuple[b
 
 
 def create_initial_admin(email: str, full_name: str, plain_password: str,
-                         business_role: str = "DP") -> tuple[bool, str]:
+                         business_role: str = "DP") -> Tuple[bool, str]:
     """Tạo tài khoản ADMIN đầu tiên trong lần khởi tạo hệ thống"""
     return create_user(email, full_name, plain_password, business_role, "ADMIN")
+
+
+# ────────────────────────────────────────────────────────────
+# Session persistence
+# ────────────────────────────────────────────────────────────
+
+
+def _load() -> None:
+    global _SESSIONS
+    try:
+        if _SESSION_FILE.exists():
+            raw = json.loads(_SESSION_FILE.read_text(encoding="utf-8"))
+            now = time.time()
+            _SESSIONS = {k: v for k, v in raw.items() if v.get("_exp", 0) > now}
+    except Exception:
+        _SESSIONS = {}
+
+
+def _save() -> None:
+    try:
+        _SESSION_FILE.write_text(
+            json.dumps(_SESSIONS, ensure_ascii=False, default=str),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+# Nạp khi module được import lần đầu
+_load()
+
+
+def create_session(user: dict) -> str:
+    token = secrets.token_urlsafe(32)
+    _SESSIONS[token] = {**user, "_exp": time.time() + _MAX_AGE_SEC}
+    _save()
+    return token
+
+
+def get_session(token: str) -> Optional[dict]:
+    if not token:
+        return None
+    entry = _SESSIONS.get(token)
+    if not entry:
+        _load()
+        entry = _SESSIONS.get(token)
+    if not entry:
+        return None
+    if entry.get("_exp", 0) < time.time():
+        delete_session(token)
+        return None
+    return {k: v for k, v in entry.items() if not k.startswith("_")}
+
+
+def delete_session(token: str) -> None:
+    _SESSIONS.pop(token, None)
+    _save()
+
+
+def write_session_cookie(token: str) -> None:
+    components.html(
+        f'<script>document.cookie="{_COOKIE_NAME}={token};'
+        f'max-age={_MAX_AGE_SEC};path=/;SameSite=Strict";</script>',
+        height=0,
+    )
+
+
+def clear_session_cookie() -> None:
+    components.html(
+        f'<script>document.cookie="{_COOKIE_NAME}=;max-age=0;path=/";</script>',
+        height=0,
+    )
+
+
+def read_session_cookie() -> Optional[str]:
+    try:
+        cookies_header = st.context.headers.get("cookie", "")
+    except AttributeError:
+        return None
+    for part in cookies_header.split(";"):
+        k, _, v = part.strip().partition("=")
+        if k.strip() == _COOKIE_NAME:
+            return v.strip() or None
+    return None

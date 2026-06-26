@@ -8,6 +8,7 @@ import json
 import re
 import unicodedata
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote_plus
 
 from sqlalchemy import create_engine, text
@@ -24,7 +25,7 @@ CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 # Config helpers
 # ────────────────────────────────────────────────────────────
 
-def get_database_url() -> str | None:
+def get_database_url() -> Optional[str]:
     # 1. config.json (local dev)
     if CONFIG_FILE.exists():
         try:
@@ -67,14 +68,14 @@ def _create_engine(url: str):
     return create_engine(url, pool_pre_ping=True)
 
 
-def get_engine(url: str | None = None):
+def get_engine(url: Optional[str] = None):
     db_url = url or get_database_url()
     if not db_url:
         raise EnvironmentError("Database chưa được cấu hình. Vào Cài đặt để thiết lập.")
     return _create_engine(db_url)
 
 
-def test_connection(url: str) -> tuple[bool, str]:
+def test_connection(url: str) -> Tuple[bool, str]:
     """Kiểm tra kết nối, trả về (success, message)"""
     try:
         engine = get_engine(url)
@@ -103,158 +104,67 @@ def is_db_initialized() -> bool:
 
 _TABLE_OPTIONS = "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
 
-DDL_STATEMENTS = [
-    # Users
-    f"""
-    CREATE TABLE IF NOT EXISTS `users` (
-        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        `email` VARCHAR(255) UNIQUE NOT NULL,
-        `full_name` VARCHAR(255),
-        `password_hash` VARCHAR(255) NOT NULL,
-        `business_role` VARCHAR(10) NOT NULL,
-        `system_role` VARCHAR(20) NOT NULL DEFAULT 'VIEWER',
-        `is_active` TINYINT(1) DEFAULT 1,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
-    """,
-    # fc_muf
-    f"""
-    CREATE TABLE IF NOT EXISTS `fc_muf` (
-        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        `from_date` DATE,
-        `to_date` DATE,
-        `factory` VARCHAR(255),
-        `region` VARCHAR(255),
-        `channel` VARCHAR(255),
-        `group_customer` VARCHAR(255),
-        `customer` VARCHAR(255),
-        `item_code` VARCHAR(100) NOT NULL,
-        `item_des` TEXT,
-        `qty_1` DECIMAL(18,4),
-        `unit_1` VARCHAR(50),
-        `qty_2` DECIMAL(18,4),
-        `unit_2` VARCHAR(50),
-        `version_id` INT NOT NULL,
-        `uploaded_by` VARCHAR(255),
-        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
-    """,
-    # fc_target
-    f"""
-    CREATE TABLE IF NOT EXISTS `fc_target` (
-        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        `from_date` DATE,
-        `to_date` DATE,
-        `factory` VARCHAR(255),
-        `region` VARCHAR(255),
-        `channel` VARCHAR(255),
-        `group_customer` VARCHAR(255),
-        `customer` VARCHAR(255),
-        `item_code` VARCHAR(100) NOT NULL,
-        `item_des` TEXT,
-        `qty_1` DECIMAL(18,4),
-        `unit_1` VARCHAR(50),
-        `qty_2` DECIMAL(18,4),
-        `unit_2` VARCHAR(50),
-        `version_id` INT NOT NULL,
-        `uploaded_by` VARCHAR(255),
-        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
-    """,
-    # fc_le_gt_ambient
-    f"""
-    CREATE TABLE IF NOT EXISTS `fc_le_gt_ambient` (
-        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        `from_date` DATE,
-        `to_date` DATE,
-        `factory` VARCHAR(255),
-        `region` VARCHAR(255),
-        `channel` VARCHAR(255),
-        `group_customer` VARCHAR(255),
-        `customer` VARCHAR(255),
-        `item_code` VARCHAR(100) NOT NULL,
-        `item_des` TEXT,
-        `qty_1` DECIMAL(18,4),
-        `unit_1` VARCHAR(50),
-        `qty_2` DECIMAL(18,4),
-        `unit_2` VARCHAR(50),
-        `version_id` INT NOT NULL,
-        `uploaded_by` VARCHAR(255),
-        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
-    """,
-    # fc_le_mt_ambient
-    f"""
-    CREATE TABLE IF NOT EXISTS `fc_le_mt_ambient` (
-        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        `from_date` DATE,
-        `to_date` DATE,
-        `factory` VARCHAR(255),
-        `region` VARCHAR(255),
-        `channel` VARCHAR(255),
-        `group_customer` VARCHAR(255),
-        `customer` VARCHAR(255),
-        `item_code` VARCHAR(100) NOT NULL,
-        `item_des` TEXT,
-        `qty_1` DECIMAL(18,4),
-        `unit_1` VARCHAR(50),
-        `qty_2` DECIMAL(18,4),
-        `unit_2` VARCHAR(50),
-        `version_id` INT NOT NULL,
-        `uploaded_by` VARCHAR(255),
-        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
-    """,
-    # fc_le_mt_chillfrozen
-    f"""
-    CREATE TABLE IF NOT EXISTS `fc_le_mt_chillfrozen` (
-        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        `from_date` DATE,
-        `to_date` DATE,
-        `factory` VARCHAR(255),
-        `region` VARCHAR(255),
-        `channel` VARCHAR(255),
-        `group_customer` VARCHAR(255),
-        `customer` VARCHAR(255),
-        `item_code` VARCHAR(100) NOT NULL,
-        `item_des` TEXT,
-        `qty_1` DECIMAL(18,4),
-        `unit_1` VARCHAR(50),
-        `qty_2` DECIMAL(18,4),
-        `unit_2` VARCHAR(50),
-        `version_id` INT NOT NULL,
-        `uploaded_by` VARCHAR(255),
-        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
-    """,
-    # khsx
-    f"""
-    CREATE TABLE IF NOT EXISTS `khsx` (
-        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        `date_nhap` DATE,
-        `factory` VARCHAR(255),
-        `region` VARCHAR(255),
-        `channel` VARCHAR(255),
-        `group_customer` VARCHAR(255),
-        `customer` VARCHAR(255),
-        `item_code` VARCHAR(100) NOT NULL,
-        `item_des` TEXT,
-        `qty_1` DECIMAL(18,4),
-        `unit_1` VARCHAR(50),
-        `qty_2` DECIMAL(18,4),
-        `unit_2` VARCHAR(50),
-        `version_id` INT NOT NULL,
-        `uploaded_by` VARCHAR(255),
-        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        `based_on_fc_le_gt_ambient_version` INT,
-        `based_on_fc_le_mt_ambient_version` INT,
-        `based_on_fc_le_mt_chillfrozen_version` INT
-    ) {_TABLE_OPTIONS}
-    """,
-    # md_items
-    f"""
-    CREATE TABLE IF NOT EXISTS `md_items` (
+
+def _create_table_sql(table_name: str, columns: str) -> str:
+    return f"CREATE TABLE IF NOT EXISTS `{table_name}` (\n{columns}\n) {_TABLE_OPTIONS}"
+
+
+_USER_TABLE_COLUMNS = """
+    `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `email` VARCHAR(255) UNIQUE NOT NULL,
+    `full_name` VARCHAR(255),
+    `password_hash` VARCHAR(255) NOT NULL,
+    `business_role` VARCHAR(10) NOT NULL,
+    `system_role` VARCHAR(20) NOT NULL DEFAULT 'VIEWER',
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+"""
+
+_FC_TABLE_COLUMNS = """
+    `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `from_date` DATE,
+    `to_date` DATE,
+    `factory` VARCHAR(255),
+    `region` VARCHAR(255),
+    `channel` VARCHAR(255),
+    `group_customer` VARCHAR(255),
+    `customer` VARCHAR(255),
+    `item_code` VARCHAR(100) NOT NULL,
+    `item_des` TEXT,
+    `qty_1` DECIMAL(18,4),
+    `unit_1` VARCHAR(50),
+    `qty_2` DECIMAL(18,4),
+    `unit_2` VARCHAR(50),
+    `version_id` INT NOT NULL,
+    `uploaded_by` VARCHAR(255),
+    `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+"""
+
+_KHSX_TABLE_COLUMNS = """
+    `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `date_nhap` DATE,
+    `factory` VARCHAR(255),
+    `region` VARCHAR(255),
+    `channel` VARCHAR(255),
+    `group_customer` VARCHAR(255),
+    `customer` VARCHAR(255),
+    `item_code` VARCHAR(100) NOT NULL,
+    `item_des` TEXT,
+    `qty_1` DECIMAL(18,4),
+    `unit_1` VARCHAR(50),
+    `qty_2` DECIMAL(18,4),
+    `unit_2` VARCHAR(50),
+    `version_id` INT NOT NULL,
+    `uploaded_by` VARCHAR(255),
+    `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `based_on_fc_le_gt_ambient_version` INT,
+    `based_on_fc_le_mt_ambient_version` INT,
+    `based_on_fc_le_mt_chillfrozen_version` INT
+"""
+
+_MD_TABLE_COLUMNS = {
+    "md_items": """
         `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         `item_code` VARCHAR(100),
         `item_description` TEXT,
@@ -277,11 +187,8 @@ DDL_STATEMENTS = [
         `version_id` INT NOT NULL,
         `uploaded_by` VARCHAR(255),
         `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
     """,
-    # md_org
-    f"""
-    CREATE TABLE IF NOT EXISTS `md_org` (
+    "md_org": """
         `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         `ou_code` VARCHAR(100),
         `ou_name` VARCHAR(255),
@@ -298,11 +205,8 @@ DDL_STATEMENTS = [
         `version_id` INT NOT NULL,
         `uploaded_by` VARCHAR(255),
         `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
     """,
-    # md_price
-    f"""
-    CREATE TABLE IF NOT EXISTS `md_price` (
+    "md_price": """
         `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         `item_code` VARCHAR(100),
         `item_description` TEXT,
@@ -312,11 +216,8 @@ DDL_STATEMENTS = [
         `version_id` INT NOT NULL,
         `uploaded_by` VARCHAR(255),
         `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
     """,
-    # md_uom
-    f"""
-    CREATE TABLE IF NOT EXISTS `md_uom` (
+    "md_uom": """
         `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         `item_no` VARCHAR(100),
         `item_name` TEXT,
@@ -335,11 +236,8 @@ DDL_STATEMENTS = [
         `version_id` INT NOT NULL,
         `uploaded_by` VARCHAR(255),
         `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
     """,
-    # md_whmatrix
-    f"""
-    CREATE TABLE IF NOT EXISTS `md_whmatrix` (
+    "md_whmatrix": """
         `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         `whs_ship` VARCHAR(255),
         `whs_received` VARCHAR(255),
@@ -348,12 +246,24 @@ DDL_STATEMENTS = [
         `version_id` INT NOT NULL,
         `uploaded_by` VARCHAR(255),
         `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) {_TABLE_OPTIONS}
     """,
+}
+
+_FC_TABLE_NAMES = [
+    "fc_muf", "fc_target", "fc_le_gt_ambient",
+    "fc_le_mt_ambient", "fc_le_mt_chillfrozen",
 ]
 
+DDL_STATEMENTS = []
+DDL_STATEMENTS.append(_create_table_sql("users", _USER_TABLE_COLUMNS))
+for name in _FC_TABLE_NAMES:
+    DDL_STATEMENTS.append(_create_table_sql(name, _FC_TABLE_COLUMNS))
+DDL_STATEMENTS.append(_create_table_sql("khsx", _KHSX_TABLE_COLUMNS))
+for name, columns in _MD_TABLE_COLUMNS.items():
+    DDL_STATEMENTS.append(_create_table_sql(name, columns))
 
-def create_all_tables(url: str | None = None) -> tuple[bool, str]:
+
+def create_all_tables(url: Optional[str] = None) -> Tuple[bool, str]:
     """Tạo tất cả bảng, trả về (success, message)"""
     try:
         engine = get_engine(url)
@@ -364,6 +274,23 @@ def create_all_tables(url: str | None = None) -> tuple[bool, str]:
         return True, "Tạo bảng thành công! (12 bảng nghiệp vụ + users)"
     except Exception as e:
         return False, f"Lỗi tạo bảng: {e}"
+
+
+def _rows_to_df(result) -> pd.DataFrame:
+    rows = result.fetchall()
+    return pd.DataFrame(rows, columns=result.keys())
+
+
+def _coerce_numeric(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
+    for col in cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+    return df
+
+
+def _fetch_dataframe(conn, query: str, params: Optional[dict] = None) -> pd.DataFrame:
+    result = conn.execute(text(query), params or {})
+    return _rows_to_df(result)
 
 
 # ────────────────────────────────────────────────────────────
@@ -379,7 +306,7 @@ def get_next_version_id(table_name: str) -> int:  # không cache — phải lấ
 
 
 @st.cache_data(ttl=300)
-def get_versions(table_name: str) -> list[dict]:
+def get_versions(table_name: str) -> List[dict]:
     """Lấy danh sách version theo bảng, mới nhất trước"""
     try:
         engine = get_engine()
@@ -435,7 +362,7 @@ def get_table_stats(table_name: str) -> dict:
 def _backtick_insert(pd_table, conn, keys, data_iter):
     """
     Custom pandas to_sql method — wraps every identifier in backticks.
-    Fixes MariaDB syntax errors for reserved-word column names (to_date, etc.).
+    Fixes MariaDB syntax errors cho reserved-word column names.
     """
     cols   = ", ".join(f"`{k}`" for k in keys)
     params = ", ".join(f":{k}" for k in keys)
@@ -454,51 +381,52 @@ KHSX_DB_COLS = ["date_nhap", "factory", "region", "channel", "group_customer",
                 "qty_1", "unit_1", "qty_2", "unit_2"]
 
 
-def upload_fc_data(df: pd.DataFrame, table_name: str, uploaded_by: str) -> int:
-    """
-    Bulk insert dữ liệu FC. Mỗi lần upload tạo 1 version_id mới.
-    Trả về version_id vừa tạo.
-    """
+def _prepare_versioned_df(df: pd.DataFrame, columns: List[str], extra: Optional[Dict[str, object]] = None) -> pd.DataFrame:
+    df = df.copy()
+    df.columns = [c.lower().strip() for c in df.columns]
+    df = df[[c for c in columns if c in df.columns]].copy()
+    if extra:
+        for key, value in extra.items():
+            df[key] = value
+    return df
+
+
+def _upload_versioned_data(df: pd.DataFrame, table_name: str, columns: List[str], uploaded_by: str, extra: Optional[Dict[str, object]] = None) -> int:
     engine = get_engine()
     with engine.connect() as conn:
         version_id = conn.execute(
             text(f"SELECT COALESCE(MAX(version_id), 0) + 1 FROM `{table_name}`")
         ).scalar()
-
-        df = df.copy()
-        df.columns = [c.lower().strip() for c in df.columns]
-        df = df[[c for c in FC_DB_COLS if c in df.columns]].copy()
-        df["version_id"]   = version_id
-        df["uploaded_by"]  = uploaded_by
-
-        df.to_sql(table_name, conn, if_exists="append", index=False, method=_backtick_insert, chunksize=500)
+        payload = _prepare_versioned_df(df, columns, {
+            "version_id": version_id,
+            "uploaded_by": uploaded_by,
+            **(extra or {}),
+        })
+        payload.to_sql(table_name, conn, if_exists="append", index=False,
+                      method=_backtick_insert, chunksize=500)
         conn.commit()
-
     return version_id
+
+
+def upload_fc_data(df: pd.DataFrame, table_name: str, uploaded_by: str) -> int:
+    """
+    Bulk insert dữ liệu FC. Mỗi lần upload tạo 1 version_id mới.
+    Trả về version_id vừa tạo.
+    """
+    return _upload_versioned_data(df, table_name, FC_DB_COLS, uploaded_by)
 
 
 def upload_khsx_data(df: pd.DataFrame, uploaded_by: str,
-                     ref_gt: int | None, ref_mt_amb: int | None, ref_mt_cf: int | None) -> int:
+                     ref_gt: Optional[int], ref_mt_amb: Optional[int], ref_mt_cf: Optional[int]) -> int:
     """Bulk insert dữ liệu KHSX kèm 3 tham chiếu FC LE (nullable)."""
-    engine = get_engine()
-    with engine.connect() as conn:
-        version_id = conn.execute(
-            text("SELECT COALESCE(MAX(version_id), 0) + 1 FROM `khsx`")
-        ).scalar()
-
-        df = df.copy()
-        df.columns = [c.lower().strip() for c in df.columns]
-        df = df[[c for c in KHSX_DB_COLS if c in df.columns]].copy()
-        df["version_id"]   = version_id
-        df["uploaded_by"]  = uploaded_by
-        df["based_on_fc_le_gt_ambient_version"]    = ref_gt
-        df["based_on_fc_le_mt_ambient_version"]    = ref_mt_amb
-        df["based_on_fc_le_mt_chillfrozen_version"] = ref_mt_cf
-
-        df.to_sql("khsx", conn, if_exists="append", index=False, method=_backtick_insert, chunksize=500)
-        conn.commit()
-
-    return version_id
+    return _upload_versioned_data(
+        df, "khsx", KHSX_DB_COLS, uploaded_by,
+        {
+            "based_on_fc_le_gt_ambient_version": ref_gt,
+            "based_on_fc_le_mt_ambient_version": ref_mt_amb,
+            "based_on_fc_le_mt_chillfrozen_version": ref_mt_cf,
+        }
+    )
 
 
 def fmt_ver(version_id, uploaded_at) -> str:
@@ -533,7 +461,7 @@ def get_fc_data_by_version(table_name: str, version_id: int) -> pd.DataFrame:
     """Lấy dữ liệu FC của 1 version, aggregate theo item_code + from_date"""
     engine = get_engine()
     with engine.connect() as conn:
-        result = conn.execute(text(f"""
+        df = _fetch_dataframe(conn, f"""
             SELECT `item_code`, `item_des`, `from_date`, `to_date`,
                    SUM(`qty_1`) AS qty_1, SUM(`qty_2`) AS qty_2,
                    `factory`, `region`, `channel`
@@ -542,13 +470,8 @@ def get_fc_data_by_version(table_name: str, version_id: int) -> pd.DataFrame:
             GROUP BY `item_code`, `item_des`, `from_date`, `to_date`,
                      `factory`, `region`, `channel`
             ORDER BY `item_code`, `from_date`
-        """), {"v": version_id})
-        rows = result.fetchall()
-        df = pd.DataFrame(rows, columns=result.keys())
-    for c in ("qty_1", "qty_2"):
-        if c in df.columns:
-            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
-    return df
+        """ , {"v": version_id})
+    return _coerce_numeric(df, ["qty_1", "qty_2"])
 
 
 @st.cache_data(ttl=3600)
@@ -580,16 +503,15 @@ def get_khsx_data_by_version(version_id: int) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=3600)
-def get_version_rows(table_name: str, version_id: int, limit: int | None = None) -> pd.DataFrame:
+def get_version_rows(table_name: str, version_id: int, limit: Optional[int] = None) -> pd.DataFrame:
     """Lấy dữ liệu thô của 1 version (dùng cho trang Lịch sử phiên bản)"""
     engine = get_engine()
     lim = f"LIMIT {limit}" if limit else ""
     with engine.connect() as conn:
-        result = conn.execute(text(
-            f"SELECT * FROM `{table_name}` WHERE `version_id` = :v ORDER BY `id` {lim}"
-        ), {"v": version_id})
-        rows = result.fetchall()
-        df = pd.DataFrame(rows, columns=result.keys())
+        df = _fetch_dataframe(conn, 
+            f"SELECT * FROM `{table_name}` WHERE `version_id` = :v ORDER BY `id` {lim}",
+            {"v": version_id}
+        )
     return df.drop(columns=["id"], errors="ignore")
 
 
@@ -680,10 +602,7 @@ def get_khsx_spotlight(version_id: int, limit: int = 50) -> pd.DataFrame:
             FROM `khsx` WHERE `version_id` = :v
             GROUP BY `item_code` ORDER BY u1 DESC LIMIT :lim
         """), conn, params={"v": version_id, "lim": limit})
-    for c in ("u1", "u2"):
-        if c in df.columns:
-            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
-    return df
+    return _coerce_numeric(df, ["u1", "u2"])
 
 
 # ────────────────────────────────────────────────────────────
@@ -732,7 +651,7 @@ def _normalize_col(col: str) -> str:
 
 
 @st.cache_data(ttl=60)
-def get_md_versions(table_name: str) -> list[dict]:
+def get_md_versions(table_name: str) -> List[dict]:
     """Danh sách version của 1 bảng masterdata, mới nhất trước."""
     try:
         engine = get_engine()
@@ -760,11 +679,10 @@ def get_md_preview(table_name: str, version_id: int, limit: int = 10) -> pd.Data
     try:
         engine = get_engine()
         with engine.connect() as conn:
-            result = conn.execute(text(
-                f"SELECT * FROM `{table_name}` WHERE version_id = :v ORDER BY id LIMIT :lim"
-            ), {"v": version_id, "lim": limit})
-            rows = result.fetchall()
-            df = pd.DataFrame(rows, columns=result.keys())
+            df = _fetch_dataframe(conn,
+                f"SELECT * FROM `{table_name}` WHERE version_id = :v ORDER BY id LIMIT :lim",
+                {"v": version_id, "lim": limit}
+            )
         return df.drop(columns=["id", "version_id", "uploaded_by", "uploaded_at"], errors="ignore")
     except Exception:
         return pd.DataFrame()
@@ -797,7 +715,7 @@ def upload_md_data(df: pd.DataFrame, table_name: str, uploaded_by: str) -> int:
     return version_id
 
 
-def delete_md_version(table_name: str, version_id: int) -> tuple[bool, str]:
+def delete_md_version(table_name: str, version_id: int) -> Tuple[bool, str]:
     """Xóa toàn bộ dữ liệu của 1 version trong bảng masterdata."""
     try:
         engine = get_engine()

@@ -302,16 +302,15 @@ def section(title: str, sub: str = "") -> None:
                 unsafe_allow_html=True)
 
 
-def kpi_cards(cards: list[dict]) -> None:
+def kpi_cards(cards: List[dict]) -> None:
     """cards: list of dict(label, value, icon='', delta='', tone='neutral'|'pos'|'neg', foot='')"""
-    p = _P
     items = []
     for c in cards:
         ico = f'<span class="kpi-ico">{c.get("icon","")}</span>' if c.get("icon") else ""
+        tone = c.get("tone", "neutral")
+        arrow = "▲" if tone == "pos" else "▼" if tone == "neg" else "•"
         delta = ""
         if c.get("delta"):
-            tone = c.get("tone", "neutral")
-            arrow = "▲" if tone == "pos" else "▼" if tone == "neg" else "•"
             foot = f'<span class="kpi-foot">· {c["foot"]}</span>' if c.get("foot") else ""
             delta = f'<div class="kpi-delta {tone}">{arrow} {c["delta"]} {foot}</div>'
         elif c.get("foot"):
@@ -337,6 +336,17 @@ def chart_colors() -> dict:
     }
 
 
+def page_header(title: str, subtitle: str = "") -> None:
+    """Tiêu đề trang chuẩn — dùng ở đầu mỗi trang nội dung."""
+    sub_html = f'<p class="ph-sub">{subtitle}</p>' if subtitle else ""
+    st.markdown(f"""
+    <div class="ph-wrap">
+        <h1 class="ph-title">{title}</h1>
+        {sub_html}
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def style_chart(ch):
     """Áp ERP theme thống nhất cho mọi biểu đồ Altair."""
     c = chart_colors()
@@ -351,3 +361,11 @@ def style_chart(ch):
                             labelFontSize=11, titleFontSize=11, orient="top")
           .configure_title(color=c["text"], fontSize=13, anchor="start", fontWeight=700)
     )
+
+
+def to_excel_bytes(df: pd.DataFrame) -> bytes:
+    """Convert DataFrame to Excel bytes for download."""
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False)
+    return buf.getvalue()
