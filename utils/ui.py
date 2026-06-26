@@ -171,21 +171,98 @@ div[data-testid="stMetric"], div[data-testid="metric-container"] {{
 .stTabs [data-baseweb="tab-list"] {{ gap:.25rem !important; border-bottom:1px solid var(--border) !important; }}
 .stTabs [data-baseweb="tab"] {{ font-size:.84rem !important; font-weight:600 !important;
     color: var(--text-dim) !important; padding:.6rem .95rem !important;
-    border-radius:9px 9px 0 0 !important;
-    filter: grayscale(1) opacity(.65) !important; }}
+    border-radius:9px 9px 0 0 !important; }}
 .stTabs [aria-selected="true"] {{ color: var(--brand) !important;
-    border-bottom:2px solid var(--brand) !important;
-    filter: grayscale(1) opacity(1) brightness(.55) !important; }}
+    border-bottom:2px solid var(--brand) !important; }}
 
-/* ── Inputs / selects ────────────────────────────────────── */
+/* ── Section h3/h4 ───────────────────────────────────────── */
+.main h3 {{ font-size:1.08rem !important; font-weight:700 !important; color:var(--text) !important;
+    margin:1.4rem 0 .6rem !important; letter-spacing:-.2px !important; }}
+.main h4 {{ font-size:.95rem !important; font-weight:700 !important; color:var(--text-dim) !important;
+    margin:1.1rem 0 .5rem !important; letter-spacing:.1px !important;
+    text-transform:uppercase; font-size:.75rem !important; letter-spacing:.8px !important; }}
+
+/* ── Inline code ─────────────────────────────────────────── */
+code {{ background: var(--brand-soft) !important; color: var(--brand) !important;
+    border: 1px solid var(--border) !important; border-radius:5px !important;
+    padding: 1px 6px !important; font-size:.82em !important; }}
+
+/* ── Labels ──────────────────────────────────────────────── */
+.stTextInput label, .stSelectbox label, .stNumberInput label,
+.stPasswordInput label, .stTextArea label, .stFileUploader label {{
+    color: var(--text-dim) !important; font-size:.8rem !important;
+    font-weight:600 !important; letter-spacing:.15px !important; }}
+
+/* ── Inputs / textarea ───────────────────────────────────── */
+[data-baseweb="input"] {{
+    background: var(--surface-2) !important;
+    border-color: var(--border-strong) !important; border-radius:9px !important; }}
+[data-baseweb="input"]:focus-within {{
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 2px rgba(91,141,239,.18) !important; }}
+[data-baseweb="input"] input {{ color: var(--text) !important; background:transparent !important; }}
+[data-baseweb="input"] input::placeholder {{ color: var(--text-faint) !important; }}
+[data-baseweb="textarea"] {{
+    background: var(--surface-2) !important; border-color: var(--border-strong) !important;
+    border-radius:9px !important; }}
+[data-baseweb="textarea"] textarea {{ color: var(--text) !important; background:transparent !important; }}
+
+/* ── Selectbox ───────────────────────────────────────────── */
+[data-baseweb="select"] > div:first-child {{
+    background: var(--surface-2) !important; border-color: var(--border-strong) !important;
+    border-radius:9px !important; }}
+[data-baseweb="select"] [data-value], [data-baseweb="select"] span {{
+    color: var(--text) !important; }}
+[data-baseweb="popover"] {{ background: var(--surface) !important;
+    border: 1px solid var(--border) !important; box-shadow: var(--shadow) !important;
+    border-radius:10px !important; }}
+[data-baseweb="menu"] {{ background: var(--surface) !important; border-radius:10px !important; }}
+[data-baseweb="option"] {{ background: var(--surface) !important; color: var(--text) !important; }}
+[data-baseweb="option"]:hover {{ background: var(--brand-soft) !important; color: var(--brand) !important; }}
+
+/* ── File uploader ───────────────────────────────────────── */
+[data-testid="stFileUploader"] {{ border-radius:12px !important; }}
+[data-testid="stFileUploadDropzone"] {{
+    background: var(--surface-2) !important;
+    border: 2px dashed var(--border-strong) !important;
+    border-radius:12px !important; }}
+[data-testid="stFileUploadDropzone"]:hover {{
+    border-color: var(--brand) !important;
+    background: var(--brand-soft) !important; }}
+[data-testid="stFileUploadDropzone"] p,
+[data-testid="stFileUploadDropzone"] small,
+[data-testid="stFileUploadDropzone"] span {{ color: var(--text-dim) !important; }}
+[data-testid="stFileUploadDropzone"] button {{
+    background: var(--surface) !important; color: var(--brand) !important;
+    border: 1px solid var(--border-strong) !important; border-radius:8px !important; }}
+
+/* ── Form container ──────────────────────────────────────── */
+[data-testid="stForm"] {{
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border) !important; border-radius:14px !important;
+    padding: 1.2rem 1.4rem 1rem !important; }}
+
+/* ── Expander ────────────────────────────────────────────── */
+[data-testid="stExpander"] {{ border:1px solid var(--border) !important;
+    border-radius:12px !important; background: var(--surface) !important; overflow:hidden !important; }}
+[data-testid="stExpander"] summary {{
+    color: var(--text) !important; font-weight:600 !important; font-size:.88rem !important; }}
+[data-testid="stExpander"] summary:hover {{ background: var(--brand-soft) !important; }}
+
+/* ── DataFame ────────────────────────────────────────────── */
 [data-testid="stDataFrame"] {{ border:1px solid var(--border) !important; border-radius:12px !important;
     overflow:hidden !important; box-shadow: var(--shadow) !important; }}
-[data-testid="stExpander"] {{ border:1px solid var(--border) !important; border-radius:12px !important;
-    background: var(--surface) !important; }}
-[data-testid="stFileUploader"] {{ border-radius:12px !important; }}
+
+/* ── Uploaded file badge ─────────────────────────────────── */
+[data-testid="stFileUploaderFile"] {{
+    background: var(--surface) !important; border: 1px solid var(--border) !important;
+    border-radius:8px !important; }}
+[data-testid="stFileUploaderFile"] span {{ color: var(--text) !important; }}
+
+/* ── Divider ─────────────────────────────────────────────── */
 hr {{ border-color: var(--border) !important; margin:1.2rem 0 !important; }}
 
-/* chart container subtle card */
+/* ── Chart card ──────────────────────────────────────────── */
 [data-testid="stVegaLiteChart"], .stVegaLiteChart {{
     background: var(--surface); border:1px solid var(--border); border-radius:14px;
     padding:.65rem .4rem .2rem; box-shadow: var(--shadow); }}
