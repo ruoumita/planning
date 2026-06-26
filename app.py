@@ -58,18 +58,16 @@ section[data-testid="stSidebar"] > div:first-child {
     background:#2A3444 !important; color:#38BDF8 !important;
     border-left:3px solid #38BDF8 !important; font-weight:600 !important; }
 [data-testid="stSidebar"] .stButton > button {
-    font-size:.79rem !important; font-weight:500 !important; border-radius:4px !important;
-    width:100% !important; background:rgba(239,68,68,.1) !important; color:#F87171 !important;
-    border:1px solid rgba(239,68,68,.25) !important; transition:all .12s !important; }
-[data-testid="stSidebar"] .stButton > button:hover {
-    background:rgba(239,68,68,.18) !important; color:#FCA5A5 !important; }
+        font-size:.79rem !important; font-weight:900 !important; border-radius:4px !important;
+        width:100% !important; background:rgba(255,255,255,0.10) !important;
+        color:#FFFFFF !important; border:1px solid rgba(255,255,255,0.24) !important;
+        transition:all .12s !important; }
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background:rgba(255,255,255,0.18) !important; color:#FFFFFF !important; }
+    [data-testid="stSidebar"] .stButton > button span,
+    [data-testid="stSidebar"] .stButton > button {
+        font-weight:900 !important; color:#FFFFFF !important; }
 </style>""", unsafe_allow_html=True)
-
-
-# ════════════════════════════════════════════════════════════
-# SIDEBAR BUILDER
-# ════════════════════════════════════════════════════════════
-
 def _sidebar_header():
     logo_html = (
         f'<img src="{_LOGO_SRC}" style="width:42px;height:42px;border-radius:9px;'
@@ -84,9 +82,9 @@ def _sidebar_header():
         <div style="display:flex; align-items:center; gap:.7rem;">
             {logo_html}
             <div>
-                <div style="color:#E2E8F0;font-weight:700;font-size:.86rem;
+                <div style="color:#EF4444;font-weight:700;font-size:.86rem;
                             line-height:1.15;letter-spacing:-.1px;">F2A System</div>
-                <div style="color:#4A5E7A;font-size:.63rem;letter-spacing:1px;
+                <div style="color:#38BDF8;font-size:.63rem;letter-spacing:1px;
                             text-transform:uppercase;margin-top:2px;">Supply Chain · MeatDeli</div>
             </div>
         </div>
@@ -192,31 +190,43 @@ if not user:
         /* ── Login inputs: trắng rõ trên nền tối ── */
         .stApp .stTextInput > div > div,
         .stApp .stPasswordInput > div > div,
+        .stApp .stNumberInput > div > div,
+        .stApp .stSelectbox > div > div,
+        .stApp .stMultiSelectbox > div > div,
         .stApp [data-baseweb="input"],
-        .stApp [data-baseweb="input"] > div {
-            background: rgba(255,255,255,0.10) !important;
-            border: 1px solid rgba(255,255,255,0.22) !important;
-            border-radius: 10px !important;
+        .stApp [data-baseweb="input"] > div,
+        .stApp [data-baseweb="select"],
+        .stApp [data-baseweb="select"] > div,
+        .stApp [data-baseweb="textarea"],
+        .stApp [data-baseweb="textarea"] > div,
+        .stApp [data-baseweb="button"] > div {
+            background: rgba(15,23,42,0.88) !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            border-radius: 12px !important;
+            color: #F8FAFC !important;
         }
         .stApp [data-baseweb="input"] input,
         .stApp .stTextInput input,
         .stApp .stPasswordInput input,
-        .stApp .stNumberInput input {
+        .stApp .stNumberInput input,
+        .stApp [data-baseweb="select"] input,
+        .stApp [data-baseweb="textarea"] textarea,
+        .stApp [data-baseweb="multi-select"] input {
             color: #F8FAFC !important;
+            background: transparent !important;
         }
         .stApp [data-baseweb="input"] input::placeholder,
         .stApp .stTextInput input::placeholder,
         .stApp .stPasswordInput input::placeholder,
-        .stApp .stNumberInput input::placeholder {
+        .stApp .stNumberInput input::placeholder,
+        .stApp [data-baseweb="select"] input::placeholder,
+        .stApp [data-baseweb="textarea"] textarea::placeholder {
             color: #94A3B8 !important;
         }
-        .stApp [data-baseweb="select"],
-        .stApp [data-baseweb="select"] > div,
+        .stApp [data-baseweb="select"] [data-value],
         .stApp [data-baseweb="select"] span,
-        .stApp .stSelectbox > div > div,
-        .stApp .stSelectbox > div > div > div {
-            background: rgba(255,255,255,0.10) !important;
-            border: 1px solid rgba(255,255,255,0.22) !important;
+        .stApp [data-baseweb="select"] div,
+        .stApp .stMultiSelectbox > div > div {
             color: #F8FAFC !important;
         }
         .stApp label,
@@ -224,7 +234,7 @@ if not user:
         .stApp .stPasswordInput > label,
         .stApp .stNumberInput > label,
         .stApp .stSelectbox > label {
-            color: #CBD5E1 !important;
+            color: #E2E8F0 !important;
         }
         .stApp details > summary,
         .stApp details > summary span,
@@ -272,11 +282,11 @@ if not user:
         st.markdown(f"""
         <div style="text-align:center;margin-bottom:1.75rem;">
             {_login_logo}
-            <div style="font-size:.62rem;font-weight:700;color:#F97316;letter-spacing:2.5px;
+            <div style="font-size:.62rem;font-weight:700;color:#38BDF8;letter-spacing:2.5px;
                         text-transform:uppercase;margin-bottom:.4rem;">Forecast to Available System</div>
-            <h1 style="color:#F43F5E;font-size:1.95rem;font-weight:900;margin:0;
+            <h1 style="color:#EF4444;font-size:1.95rem;font-weight:900;margin:0;
                        letter-spacing:-.5px;line-height:1.1;">F2A System</h1>
-            <p style="color:#E2E8F0;font-size:.72rem;margin-top:.45rem;letter-spacing:1.2px;
+            <p style="color:#38BDF8;font-size:.72rem;margin-top:.45rem;letter-spacing:1.2px;
                       text-transform:uppercase;">Supply Chain Department &nbsp;·&nbsp; Masan MeatDeli</p>
         </div>
         """, unsafe_allow_html=True)
@@ -294,8 +304,8 @@ if not user:
             st.markdown("""
             <style>
             .stApp [data-baseweb="expander"] > div:first-child {
-                background: rgba(15,23,42,0.12) !important;
-                border: 1px solid rgba(255,255,255,0.14) !important;
+                background: rgba(15,23,42,0.22) !important;
+                border: 1px solid rgba(255,255,255,0.22) !important;
                 color: #E2E8F0 !important;
                 border-radius: 12px !important;
             }
@@ -306,7 +316,7 @@ if not user:
                 color: #E2E8F0 !important;
             }
             .stApp [data-baseweb="expander"] .streamlit-expanderContent {
-                background: rgba(15,23,42,0.14) !important;
+                background: rgba(15,23,42,0.26) !important;
                 color: #E2E8F0 !important;
             }
             </style>
@@ -367,11 +377,11 @@ if not user:
 
         # ── LOGIN ──
         st.markdown("""
-        <div style="border:1px solid rgba(248,113,113,0.35);border-radius:14px;
-                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:rgba(15,23,42,.65);
-                    backdrop-filter:blur(22px);box-shadow:0 24px 60px rgba(15,23,42,.35);">
-            <p style="color:#F87171;font-size:.78rem;font-weight:800;text-transform:uppercase;
-                      letter-spacing:2px;text-align:center;margin:0 0 .75rem;">
+        <div style="border:1px solid rgba(248,113,113,0.55);border-radius:16px;
+                    padding:1rem 1.3rem 1rem;margin-bottom:1.2rem;background:rgba(15,23,42,0.85);
+                    backdrop-filter:blur(24px);box-shadow:0 28px 72px rgba(15,23,42,.45);">
+            <p style="color:#FECACA;font-size:.84rem;font-weight:900;text-transform:uppercase;
+                      letter-spacing:2px;text-align:center;margin:0 0 .75rem;text-shadow:0 1px 4px rgba(0,0,0,.35);">
                 ĐĂNG NHẬP HỆ THỐNG
             </p>
         </div>
