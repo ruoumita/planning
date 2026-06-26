@@ -61,6 +61,7 @@ def fc_tab(tab, db_table: str, display: str, key: str):
                 with st.spinner("Đang insert..."):
                     try:
                         nv = upload_fc_data(df, db_table, user["email"])
+                        st.cache_data.clear()
                         st.success(f"🎉 Upload thành công!  Phiên bản mới: **v{nv}**")
                         st.balloons()
                     except Exception as e:
@@ -137,6 +138,7 @@ if show_sp:
                     with st.spinner("Đang insert..."):
                         try:
                             nv = upload_khsx_data(df, user["email"], rg, ra, rc)
+                            st.cache_data.clear()
                             st.success(f"🎉 Upload thành công!  Phiên bản KHSX mới: **v{nv}**")
                             st.balloons()
                         except Exception as e:

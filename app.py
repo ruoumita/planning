@@ -11,6 +11,10 @@ from utils.database import (
 )
 from utils.auth import authenticate, create_initial_admin
 from utils.ui import inject_global_css
+from utils.session import (
+    create_session, get_session, delete_session,
+    write_session_cookie, clear_session_cookie, read_session_cookie,
+)
 
 _LOGO_PATH = Path(__file__).parent / "logo MML.png"
 _LOGO_B64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode() if _LOGO_PATH.exists() else ""
@@ -102,7 +106,8 @@ def _sidebar_nav(user: dict):
         ("pages/6_Lich_Su_Phien_Ban.py", "📋  Lịch sử & Xu hướng"),
     ]
     if user["system_role"] in ("ADMIN", "MEMBER"):
-        nav.append(("pages/4_Upload.py", "📤  Upload dữ liệu"))
+        nav.append(("pages/4_Upload.py", "📤  Upload FC & KHSX"))
+    nav.append(("pages/7_Master_Data.py", "📁  Upload Master Data"))
     nav.append(("pages/5_Cai_Dat.py", "⚙️  Cài đặt"))
     for path, label in nav:
         st.sidebar.page_link(path, label=label)
@@ -144,14 +149,26 @@ def _sidebar_footer(user: dict):
     """, unsafe_allow_html=True)
 
     if st.sidebar.button("🚪  Đăng xuất", use_container_width=True, key="logout_btn"):
+        token = st.session_state.get("_session_token")
+        if token:
+            delete_session(token)
         st.session_state.clear()
+        st.session_state["_do_logout"] = True  # clear cookie ở main area
         st.rerun()
     st.sidebar.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════
-# STATE
+# STATE — restore session từ cookie nếu chưa đăng nhập
 # ════════════════════════════════════════════════════════════
+if "user" not in st.session_state:
+    _ck_token = read_session_cookie()
+    if _ck_token:
+        _ck_user = get_session(_ck_token)
+        if _ck_user:
+            st.session_state["user"] = _ck_user
+            st.session_state["_session_token"] = _ck_token
+
 user     = st.session_state.get("user")
 db_url   = get_database_url()
 db_ready = is_db_initialized() if db_url else False
@@ -162,6 +179,9 @@ _BR_OPTIONS = ["DP", "SP", "DP+SP"]
 # NOT LOGGED IN
 # ════════════════════════════════════════════════════════════
 if not user:
+    # Xóa cookie khi logout (phải render ở main area, không phải sidebar)
+    if st.session_state.pop("_do_logout", False):
+        clear_session_cookie()
     st.markdown("""<style>
         section[data-testid="stSidebar"] { display:none !important; }
         .stApp, .main .block-container {
@@ -275,7 +295,10 @@ if not user:
             else:
                 u = authenticate(email_in.strip().lower(), password_in)
                 if u:
+                    token = create_session(u)
                     st.session_state["user"] = u
+                    st.session_state["_session_token"] = token
+                    st.session_state["_write_cookie"] = token  # ghi cookie ở main area
                     st.rerun()
                 else:
                     st.error("Email hoặc mật khẩu không đúng, hoặc tài khoản bị vô hiệu hóa.")
@@ -296,7 +319,8 @@ _pages = [
     st.Page("pages/6_Lich_Su_Phien_Ban.py", title="Lịch sử & Xu hướng", icon="📋"),
 ]
 if user["system_role"] in ("ADMIN", "MEMBER"):
-    _pages.append(st.Page("pages/4_Upload.py", title="Upload dữ liệu", icon="📤"))
+    _pages.append(st.Page("pages/4_Upload.py", title="Upload FC & KHSX", icon="📤"))
+_pages.append(st.Page("pages/7_Master_Data.py", title="Upload Master Data", icon="📁"))
 _pages.append(st.Page("pages/5_Cai_Dat.py", title="Cài đặt", icon="⚙️"))
 
 pg = st.navigation(_pages, position="hidden")
@@ -306,3 +330,7 @@ _sidebar_nav(user)
 _sidebar_footer(user)
 
 pg.run()
+
+# Ghi cookie sau khi page render xong (chỉ sau lần đăng nhập đầu tiên)
+if _wc := st.session_state.pop("_write_cookie", None):
+    write_session_cookie(_wc)

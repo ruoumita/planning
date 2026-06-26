@@ -5,11 +5,14 @@ DATABASE_URL ưu tiên: config.json > biến môi trường .env
 """
 import os
 import json
+import re
+import unicodedata
 from pathlib import Path
 from urllib.parse import quote_plus
 
 from sqlalchemy import create_engine, text
 import pandas as pd
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,6 +25,7 @@ CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 # ────────────────────────────────────────────────────────────
 
 def get_database_url() -> str | None:
+    # 1. config.json (local dev)
     if CONFIG_FILE.exists():
         try:
             cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
@@ -29,6 +33,14 @@ def get_database_url() -> str | None:
                 return cfg["database_url"]
         except Exception:
             pass
+    # 2. Streamlit Cloud secrets
+    try:
+        url = st.secrets.get("DATABASE_URL")
+        if url:
+            return str(url)
+    except Exception:
+        pass
+    # 3. Environment variable
     return os.environ.get("DATABASE_URL")
 
 
@@ -50,11 +62,16 @@ def build_mysql_url(host: str, port: int, database: str, user: str, password: st
     return f"mysql+pymysql://{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/{database}?charset=utf8mb4"
 
 
+@st.cache_resource
+def _create_engine(url: str):
+    return create_engine(url, pool_pre_ping=True)
+
+
 def get_engine(url: str | None = None):
     db_url = url or get_database_url()
     if not db_url:
         raise EnvironmentError("Database chưa được cấu hình. Vào Cài đặt để thiết lập.")
-    return create_engine(db_url, pool_pre_ping=True)
+    return _create_engine(db_url)
 
 
 def test_connection(url: str) -> tuple[bool, str]:
@@ -235,6 +252,104 @@ DDL_STATEMENTS = [
         `based_on_fc_le_mt_chillfrozen_version` INT
     ) {_TABLE_OPTIONS}
     """,
+    # md_items
+    f"""
+    CREATE TABLE IF NOT EXISTS `md_items` (
+        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        `item_code` VARCHAR(100),
+        `item_description` TEXT,
+        `industry_dec` VARCHAR(255),
+        `division_desc` VARCHAR(255),
+        `sub_division_desc` VARCHAR(255),
+        `category_desc` VARCHAR(255),
+        `sub_category_desc` VARCHAR(255),
+        `brand_desc` VARCHAR(255),
+        `brandy_desc` VARCHAR(255),
+        `variant_desc` VARCHAR(255),
+        `product_format_desc` VARCHAR(255),
+        `pack_type_desc` VARCHAR(255),
+        `pack_size_desc` VARCHAR(255),
+        `standard_sku_desc` TEXT,
+        `active` VARCHAR(50),
+        `create_date` DATE,
+        `update_date` DATE,
+        `type_nd_xk` VARCHAR(100),
+        `version_id` INT NOT NULL,
+        `uploaded_by` VARCHAR(255),
+        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) {_TABLE_OPTIONS}
+    """,
+    # md_org
+    f"""
+    CREATE TABLE IF NOT EXISTS `md_org` (
+        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        `ou_code` VARCHAR(100),
+        `ou_name` VARCHAR(255),
+        `org_code` VARCHAR(100),
+        `org_id` VARCHAR(100),
+        `org_name` VARCHAR(255),
+        `organization_id` VARCHAR(100),
+        `sub_code` VARCHAR(100),
+        `sub_name` VARCHAR(255),
+        `locator_code` VARCHAR(100),
+        `locator_name` VARCHAR(255),
+        `org_type` VARCHAR(100),
+        `region` VARCHAR(100),
+        `version_id` INT NOT NULL,
+        `uploaded_by` VARCHAR(255),
+        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) {_TABLE_OPTIONS}
+    """,
+    # md_price
+    f"""
+    CREATE TABLE IF NOT EXISTS `md_price` (
+        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        `item_code` VARCHAR(100),
+        `item_description` TEXT,
+        `channel` VARCHAR(255),
+        `unit` VARCHAR(100),
+        `price` DECIMAL(18,4),
+        `version_id` INT NOT NULL,
+        `uploaded_by` VARCHAR(255),
+        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) {_TABLE_OPTIONS}
+    """,
+    # md_uom
+    f"""
+    CREATE TABLE IF NOT EXISTS `md_uom` (
+        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        `item_no` VARCHAR(100),
+        `item_name` TEXT,
+        `item_gl_class` VARCHAR(255),
+        `base_uom` VARCHAR(100),
+        `conversion1` DECIMAL(18,6),
+        `conversion_code` VARCHAR(100),
+        `conversion2` DECIMAL(18,6),
+        `um_type` VARCHAR(100),
+        `start_date` DATE,
+        `end_date` DATE,
+        `org_group` VARCHAR(255),
+        `status` VARCHAR(100),
+        `pallet_chong_doi` VARCHAR(100),
+        `item_status` VARCHAR(100),
+        `version_id` INT NOT NULL,
+        `uploaded_by` VARCHAR(255),
+        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) {_TABLE_OPTIONS}
+    """,
+    # md_whmatrix
+    f"""
+    CREATE TABLE IF NOT EXISTS `md_whmatrix` (
+        `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        `whs_ship` VARCHAR(255),
+        `whs_received` VARCHAR(255),
+        `wh_type` VARCHAR(100),
+        `wh_region` VARCHAR(100),
+        `version_id` INT NOT NULL,
+        `uploaded_by` VARCHAR(255),
+        `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) {_TABLE_OPTIONS}
+    """,
 ]
 
 
@@ -246,7 +361,7 @@ def create_all_tables(url: str | None = None) -> tuple[bool, str]:
             for stmt in DDL_STATEMENTS:
                 conn.execute(text(stmt))
             conn.commit()
-        return True, "Tạo bảng thành công! (7 bảng nghiệp vụ + users)"
+        return True, "Tạo bảng thành công! (12 bảng nghiệp vụ + users)"
     except Exception as e:
         return False, f"Lỗi tạo bảng: {e}"
 
@@ -255,7 +370,7 @@ def create_all_tables(url: str | None = None) -> tuple[bool, str]:
 # Version helpers
 # ────────────────────────────────────────────────────────────
 
-def get_next_version_id(table_name: str) -> int:
+def get_next_version_id(table_name: str) -> int:  # không cache — phải lấy MAX mới nhất khi upload
     """Lấy version_id tiếp theo cho bảng (trong 1 upload = 1 version)"""
     engine = get_engine()
     with engine.connect() as conn:
@@ -263,6 +378,7 @@ def get_next_version_id(table_name: str) -> int:
         return result.scalar()
 
 
+@st.cache_data(ttl=300)
 def get_versions(table_name: str) -> list[dict]:
     """Lấy danh sách version theo bảng, mới nhất trước"""
     try:
@@ -281,6 +397,7 @@ def get_versions(table_name: str) -> list[dict]:
         return []
 
 
+@st.cache_data(ttl=300)
 def get_table_stats(table_name: str) -> dict:
     """Thống kê nhanh cho Dashboard"""
     try:
@@ -411,6 +528,7 @@ def validate_fc_le_version_exists(table_name: str, version_id: int) -> bool:
 # Query helpers cho các trang So sánh
 # ────────────────────────────────────────────────────────────
 
+@st.cache_data(ttl=3600)
 def get_fc_data_by_version(table_name: str, version_id: int) -> pd.DataFrame:
     """Lấy dữ liệu FC của 1 version, aggregate theo item_code + from_date"""
     engine = get_engine()
@@ -433,6 +551,7 @@ def get_fc_data_by_version(table_name: str, version_id: int) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=3600)
 def get_khsx_data_by_version(version_id: int) -> pd.DataFrame:
     """Lấy dữ liệu KHSX của 1 version"""
     engine = get_engine()
@@ -460,6 +579,7 @@ def get_khsx_data_by_version(version_id: int) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=3600)
 def get_version_rows(table_name: str, version_id: int, limit: int | None = None) -> pd.DataFrame:
     """Lấy dữ liệu thô của 1 version (dùng cho trang Lịch sử phiên bản)"""
     engine = get_engine()
@@ -473,6 +593,7 @@ def get_version_rows(table_name: str, version_id: int, limit: int | None = None)
     return df.drop(columns=["id"], errors="ignore")
 
 
+@st.cache_data(ttl=300)
 def get_version_totals(table_name: str) -> pd.DataFrame:
     """
     Tổng qty_1, qty_2 và số dòng theo từng version (cũ → mới).
@@ -499,6 +620,7 @@ def get_version_totals(table_name: str) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=3600)
 def get_khsx_version_refs(version_id: int) -> dict:
     """Lấy 3 cột based_on_* của 1 version KHSX"""
     engine = get_engine()
@@ -517,3 +639,175 @@ def get_khsx_version_refs(version_id: int) -> dict:
         "mt_ambient":   r[1],
         "mt_chillfrozen": r[2],
     }
+
+
+# ────────────────────────────────────────────────────────────
+# Dashboard helpers (cached để tránh query lại mỗi lần rerender)
+# ────────────────────────────────────────────────────────────
+
+_DASHBOARD_TABLES = [
+    "fc_muf", "fc_target", "fc_le_gt_ambient",
+    "fc_le_mt_ambient", "fc_le_mt_chillfrozen", "khsx",
+]
+
+
+@st.cache_data(ttl=300)
+def get_upload_activity() -> pd.DataFrame:
+    """Upload history gộp tất cả bảng — dùng cho activity chart ở Dashboard."""
+    engine = get_engine()
+    rows = []
+    with engine.connect() as conn:
+        for tbl in _DASHBOARD_TABLES:
+            try:
+                result = conn.execute(text(
+                    f"SELECT MIN(`uploaded_at`) AS d, `version_id` FROM `{tbl}` GROUP BY `version_id`"
+                )).fetchall()
+                for r in result:
+                    if r[0]:
+                        rows.append({"table": tbl, "uploaded_at": r[0]})
+            except Exception:
+                pass
+    return pd.DataFrame(rows, columns=["table", "uploaded_at"]) if rows else pd.DataFrame()
+
+
+@st.cache_data(ttl=3600)
+def get_khsx_spotlight(version_id: int, limit: int = 50) -> pd.DataFrame:
+    """Top SKU theo qty_1 của 1 version KHSX — dùng cho Dashboard spotlight."""
+    engine = get_engine()
+    with engine.connect() as conn:
+        df = pd.read_sql(text("""
+            SELECT `item_code`, SUM(`qty_1`) AS u1, SUM(`qty_2`) AS u2
+            FROM `khsx` WHERE `version_id` = :v
+            GROUP BY `item_code` ORDER BY u1 DESC LIMIT :lim
+        """), conn, params={"v": version_id, "lim": limit})
+    for c in ("u1", "u2"):
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
+    return df
+
+
+# ────────────────────────────────────────────────────────────
+# Master Data helpers
+# ────────────────────────────────────────────────────────────
+
+# DB column definitions for each master data table
+MD_COLS = {
+    "md_items": [
+        "item_code", "item_description", "industry_dec", "division_desc",
+        "sub_division_desc", "category_desc", "sub_category_desc", "brand_desc",
+        "brandy_desc", "variant_desc", "product_format_desc", "pack_type_desc",
+        "pack_size_desc", "standard_sku_desc", "active", "create_date",
+        "update_date", "type_nd_xk",
+    ],
+    "md_org": [
+        "ou_code", "ou_name", "org_code", "org_id", "org_name",
+        "organization_id", "sub_code", "sub_name", "locator_code",
+        "locator_name", "org_type", "region",
+    ],
+    "md_price": ["item_code", "item_description", "channel", "unit", "price"],
+    "md_uom": [
+        "item_no", "item_name", "item_gl_class", "base_uom", "conversion1",
+        "conversion_code", "conversion2", "um_type", "start_date", "end_date",
+        "org_group", "status", "pallet_chong_doi", "item_status",
+    ],
+    "md_whmatrix": ["whs_ship", "whs_received", "wh_type", "wh_region"],
+}
+
+MD_COL_HINTS = {
+    "md_items": "Item code · Item Description · Industry Dec · Division Desc · Sub Dvision Desc · Category Desc · Sub Category Desc · Brand Desc · Brandy Desc · Variant Desc · Product Format Desc · Pack Type Desc · Pack Size Desc · Standard SKU Desc · Active · Create Date · Update Date · Type ND/XK",
+    "md_org":   "OU_CODE · OU_NAME · ORG_CODE · ORG_ID · ORG_NAME · ORGANIZATION_ID · SUB_CODE · SUB_NAME · LOCATOR_CODE · LOCATOR_NAME · ORG_TYPE · REGION",
+    "md_price": "Item code · Item Description · Channel · unit · price",
+    "md_uom":   "Item No · Item Name · Item Gl Class · Base Uom · Conversion1 · Conversion Code · Conversion2 · Um Type · Start Date · End Date · Org Group · Status · Pallet chồng đôi · Item Status",
+    "md_whmatrix": "Whs Ship · Whs Received · WH Type · WH Region",
+}
+
+
+def _normalize_col(col: str) -> str:
+    """Normalize Excel column name → snake_case ASCII."""
+    col = unicodedata.normalize("NFKD", str(col)).encode("ascii", "ignore").decode("ascii")
+    col = col.lower().strip()
+    col = re.sub(r"[\s/\\()\-]+", "_", col)
+    col = re.sub(r"_+", "_", col).strip("_")
+    return col
+
+
+@st.cache_data(ttl=60)
+def get_md_versions(table_name: str) -> list[dict]:
+    """Danh sách version của 1 bảng masterdata, mới nhất trước."""
+    try:
+        engine = get_engine()
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                SELECT version_id,
+                       MIN(uploaded_by) AS uploaded_by,
+                       MIN(uploaded_at) AS uploaded_at,
+                       COUNT(*)         AS row_count
+                FROM `{table_name}`
+                GROUP BY version_id
+                ORDER BY version_id DESC
+            """))
+            return [
+                {"version_id": r[0], "uploaded_by": r[1], "uploaded_at": r[2], "row_count": r[3]}
+                for r in result
+            ]
+    except Exception:
+        return []
+
+
+@st.cache_data(ttl=60)
+def get_md_preview(table_name: str, version_id: int, limit: int = 10) -> pd.DataFrame:
+    """Xem trước N dòng đầu của 1 version masterdata."""
+    try:
+        engine = get_engine()
+        with engine.connect() as conn:
+            result = conn.execute(text(
+                f"SELECT * FROM `{table_name}` WHERE version_id = :v ORDER BY id LIMIT :lim"
+            ), {"v": version_id, "lim": limit})
+            rows = result.fetchall()
+            df = pd.DataFrame(rows, columns=result.keys())
+        return df.drop(columns=["id", "version_id", "uploaded_by", "uploaded_at"], errors="ignore")
+    except Exception:
+        return pd.DataFrame()
+
+
+def upload_md_data(df: pd.DataFrame, table_name: str, uploaded_by: str) -> int:
+    """Bulk insert masterdata. Trả về version_id mới."""
+    db_cols = MD_COLS.get(table_name, [])
+    engine = get_engine()
+    with engine.connect() as conn:
+        version_id = conn.execute(
+            text(f"SELECT COALESCE(MAX(version_id), 0) + 1 FROM `{table_name}`")
+        ).scalar()
+
+        df = df.copy()
+        # Normalize column names
+        norm_map = {c: _normalize_col(c) for c in df.columns}
+        df.rename(columns=norm_map, inplace=True)
+        # Keep only known DB columns that exist in the file
+        keep = [c for c in db_cols if c in df.columns]
+        df = df[keep].copy()
+        df["version_id"]  = version_id
+        df["uploaded_by"] = uploaded_by
+
+        df.to_sql(table_name, conn, if_exists="append", index=False,
+                  method=_backtick_insert, chunksize=500)
+        conn.commit()
+
+    st.cache_data.clear()
+    return version_id
+
+
+def delete_md_version(table_name: str, version_id: int) -> tuple[bool, str]:
+    """Xóa toàn bộ dữ liệu của 1 version trong bảng masterdata."""
+    try:
+        engine = get_engine()
+        with engine.connect() as conn:
+            conn.execute(
+                text(f"DELETE FROM `{table_name}` WHERE version_id = :v"),
+                {"v": version_id}
+            )
+            conn.commit()
+        st.cache_data.clear()
+        return True, f"Đã xóa phiên bản v{version_id} khỏi `{table_name}`."
+    except Exception as e:
+        return False, f"Lỗi xóa: {e}"

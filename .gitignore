@@ -2,6 +2,7 @@
 config.json
 .env
 .streamlit/secrets.toml
+.sessions.json
 
 # Python build artifacts
 __pycache__/
