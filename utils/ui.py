@@ -79,11 +79,22 @@ def palette() -> dict:
 
 def inject_global_css() -> None:
     p = palette()
+    theme = get_theme()
     vars_block = "\n".join(f"    --{k.replace('_','-')}: {v};" for k, v in p.items())
+
+    # Map our palette to Streamlit's own CSS variable names so native components pick them up
+    _sl_bg   = p["bg"]
+    _sl_surf = p["surface_2"]
+    _sl_text = p["text"]
+    _sl_pri  = p["brand"]
 
     st.markdown(f"""<style>
 :root {{
 {vars_block}
+    --background-color: {_sl_bg};
+    --secondary-background-color: {_sl_surf};
+    --text-color: {_sl_text};
+    --primary-color: {_sl_pri};
 }}
 
 /* ── Typography ──────────────────────────────────────────── */
@@ -279,6 +290,155 @@ hr {{ border-color: var(--border) !important; margin:1.2rem 0 !important; }}
 [data-testid="stVegaLiteChart"], .stVegaLiteChart {{
     background: var(--surface); border:1px solid var(--border); border-radius:14px;
     padding:.65rem .4rem .2rem; box-shadow: var(--shadow); }}
+</style>""", unsafe_allow_html=True)
+
+    # ── Dark mode hard override (native Streamlit components) ─────────────
+    if theme == "dark":
+        D = _DARK
+        st.markdown(f"""<style>
+/* ─────────────────────────────────────────────────
+   DARK OVERRIDE — bắt buộc tất cả native component
+   dùng bảng màu tối, vì Streamlit internal theme
+   vẫn là light khi dùng custom toggle
+───────────────────────────────────────────────── */
+
+/* Page & main area */
+.stApp, .stApp > .stAppViewContainer, .stApp .main,
+.stApp .main .block-container,
+.stApp [data-testid="stAppViewBlockContainer"] {{
+    background-color: {D['bg']} !important;
+    color: {D['text']} !important;
+}}
+
+/* ALL text elements */
+.stApp p, .stApp li, .stApp td, .stApp th,
+.stApp [data-testid="stMarkdownContainer"],
+.stApp [data-testid="stMarkdownContainer"] p,
+.stApp [data-testid="stMarkdownContainer"] li,
+.stApp [data-testid="stMarkdownContainer"] span,
+.stApp .element-container p,
+.stApp .stText, .stApp .stWrite {{
+    color: {D['text']} !important;
+}}
+.stApp [data-testid="stCaptionContainer"],
+.stApp [data-testid="stCaptionContainer"] * {{
+    color: {D['text_faint']} !important;
+}}
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5 {{
+    color: {D['text']} !important;
+}}
+
+/* Form container */
+.stApp [data-testid="stForm"],
+.stApp .stForm,
+.stApp [data-testid="stForm"] > div {{
+    background-color: {D['surface_2']} !important;
+    border: 1px solid {D['border']} !important;
+    border-radius: 14px !important;
+}}
+
+/* Inputs */
+.stApp [data-baseweb="input"],
+.stApp [data-baseweb="textarea"],
+.stApp [data-baseweb="select"] > div:first-child {{
+    background-color: {D['surface_2']} !important;
+    border-color: {D['border_strong']} !important;
+}}
+.stApp [data-baseweb="input"] input,
+.stApp [data-baseweb="textarea"] textarea {{
+    color: {D['text']} !important;
+    background-color: transparent !important;
+    caret-color: {D['brand']} !important;
+}}
+.stApp [data-baseweb="input"] input::placeholder,
+.stApp [data-baseweb="textarea"] textarea::placeholder {{
+    color: {D['text_faint']} !important;
+}}
+.stApp [data-baseweb="select"] [data-value],
+.stApp [data-baseweb="select"] input,
+.stApp [data-baseweb="select"] span {{
+    color: {D['text']} !important;
+}}
+
+/* Selectbox dropdown */
+.stApp [data-baseweb="popover"],
+.stApp [data-baseweb="menu"] {{
+    background-color: {D['surface']} !important;
+    border: 1px solid {D['border']} !important;
+    box-shadow: {D['shadow']} !important;
+}}
+.stApp [data-baseweb="option"] {{
+    background-color: {D['surface']} !important;
+    color: {D['text']} !important;
+}}
+.stApp [data-baseweb="option"]:hover,
+.stApp [data-baseweb="option"][aria-selected="true"] {{
+    background-color: {D['brand_soft']} !important;
+    color: {D['brand']} !important;
+}}
+
+/* File uploader */
+.stApp [data-testid="stFileUploadDropzone"],
+.stApp .stFileUploader section,
+.stApp .stFileUploader > div > div {{
+    background-color: {D['surface_2']} !important;
+    border: 2px dashed {D['border_strong']} !important;
+    border-radius: 12px !important;
+}}
+.stApp [data-testid="stFileUploadDropzone"] p,
+.stApp [data-testid="stFileUploadDropzone"] span,
+.stApp [data-testid="stFileUploadDropzone"] small {{
+    color: {D['text_dim']} !important;
+}}
+.stApp [data-testid="stFileUploaderFile"] {{
+    background-color: {D['surface']} !important;
+    border: 1px solid {D['border']} !important;
+    border-radius: 8px !important;
+}}
+.stApp [data-testid="stFileUploaderFile"] * {{ color: {D['text_dim']} !important; }}
+
+/* Expander */
+.stApp [data-testid="stExpander"] {{
+    background-color: {D['surface']} !important;
+    border: 1px solid {D['border']} !important;
+    border-radius: 12px !important;
+}}
+.stApp [data-testid="stExpander"] summary,
+.stApp [data-testid="stExpander"] summary * {{
+    color: {D['text']} !important;
+}}
+.stApp [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {{
+    color: {D['text']} !important;
+}}
+
+/* Alert boxes */
+.stApp [data-testid="stAlert"],
+.stApp [data-testid="stNotification"] {{
+    background-color: {D['surface']} !important;
+}}
+
+/* Labels */
+.stApp label, .stApp .stTextInput label,
+.stApp .stSelectbox label, .stApp .stFileUploader label,
+.stApp .stNumberInput label, .stApp .stPasswordInput label {{
+    color: {D['text_dim']} !important;
+}}
+
+/* Popover */
+.stApp [data-testid="stPopover"],
+.stApp [data-testid="stPopover"] > div {{
+    background-color: {D['surface']} !important;
+    border: 1px solid {D['border']} !important;
+    border-radius: 12px !important;
+}}
+.stApp [data-testid="stPopover"] p {{ color: {D['text']} !important; }}
+
+/* Number input buttons */
+.stApp [data-testid="stNumberInput"] button {{
+    background-color: {D['surface_2']} !important;
+    color: {D['text_dim']} !important;
+    border-color: {D['border']} !important;
+}}
 </style>""", unsafe_allow_html=True)
 
 
