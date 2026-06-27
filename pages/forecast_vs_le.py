@@ -18,11 +18,12 @@ page_header("📈 KHSX vs FC LE", "Đối chiếu kế hoạch sản xuất vớ
 md_df = get_md_items_by_version()
 md_slicers = get_md_items_slicers()
 if not md_df.empty:
-    a, b, c, d = st.columns(4)
-    cat_sel = a.multiselect("Category", md_slicers.get("category_desc", []), key="f_cat")
-    sub_sel = b.multiselect("Sub Category", md_slicers.get("sub_category_desc", []), key="f_subcat")
-    brand_sel = c.multiselect("Brand", md_slicers.get("brand_desc", []), key="f_brand")
-    brandy_sel = d.multiselect("Brandy", md_slicers.get("brandy_desc", []), key="f_brandy")
+    a, b, c, d, e = st.columns([1, 1, 1, 1, 2])
+    cat_sel = a.multiselect("Category Desc", md_slicers.get("category_desc", []), key="f_cat")
+    sub_sel = b.multiselect("Sub Category Desc", md_slicers.get("sub_category_desc", []), key="f_subcat")
+    brand_sel = c.multiselect("Brand Desc", md_slicers.get("brand_desc", []), key="f_brand")
+    brandy_sel = d.multiselect("Brandy Desc", md_slicers.get("brandy_desc", []), key="f_brandy")
+    sku_sel = e.multiselect("Standard SKU Desc", md_slicers.get("standard_sku_desc", []), key="f_sku")
     # compute allowed item codes
     mask = pd.Series([True] * len(md_df))
     if cat_sel:
@@ -33,6 +34,8 @@ if not md_df.empty:
         mask &= md_df["brand_desc"].isin(brand_sel)
     if brandy_sel:
         mask &= md_df["brandy_desc"].isin(brandy_sel)
+    if sku_sel:
+        mask &= md_df["standard_sku_desc"].isin(sku_sel)
     md_allowed = md_df.loc[mask, "item_code"].dropna().unique().tolist()
 else:
     md_allowed = None

@@ -93,10 +93,10 @@ def _sidebar_header():
         <div style="display:flex; align-items:center; gap:.7rem;">
             {logo_html}
             <div>
-                <div style="color:#EF4444;font-weight:700;font-size:.86rem;
+                <div style="color:#EF4444;font-weight:700;font-size:.99rem;
                             line-height:1.15;letter-spacing:-.1px;">F2A System</div>
                 <div style="color:#38BDF8;font-size:.63rem;letter-spacing:1px;
-                            text-transform:uppercase;margin-top:2px;">Supply Chain · MeatDeli</div>
+                            text-transform:uppercase;margin-top:2px;">Supply Chain · Masan Meatlife</div>
             </div>
         </div>
     </div>
@@ -110,10 +110,12 @@ def _sidebar_nav(user: dict):
         unsafe_allow_html=True,
     )
     nav = [
-        ("pages/dashboard.py", "📊  Dashboard"),
-        ("pages/version_comparison.py", "🔄  Version Comparison"),
-        ("pages/forecast_vs_le.py", "📈  Forecast vs FC LE"),
-        ("pages/version_history.py", "📋  Version History"),
+        ("pages/dashboard.py", "📊  Bảng điều khiển"),
+        ("pages/inventory_stock.py", "📦  Tồn kho thành phẩm"),
+        ("pages/tracking_nhapkho.py", "🚚  Theo dõi nhập kho"),
+        ("pages/version_comparison.py", "🔄  So sánh phiên bản"),
+        ("pages/forecast_vs_le.py", "📈  KHSX vs FC LE"),
+        ("pages/version_history.py", "📋  Lịch sử phiên bản"),
     ]
     if user["system_role"] in ("ADMIN", "MEMBER"):
         nav.append(("pages/data_upload.py", "📤  Data Upload"))
@@ -533,15 +535,17 @@ if not user:
 # LOGGED IN — Navigation + Sidebar
 # ════════════════════════════════════════════════════════════
 _pages = [
-    st.Page("pages/dashboard.py", title="Dashboard", icon="📊", default=True),
-    st.Page("pages/version_comparison.py", title="Version Comparison", icon="🔄"),
-    st.Page("pages/forecast_vs_le.py", title="Forecast vs FC LE", icon="📈"),
-    st.Page("pages/version_history.py", title="Version History", icon="📋"),
+    st.Page("pages/dashboard.py", title="Bảng điều khiển", icon="📊", default=True),
+    st.Page("pages/inventory_stock.py", title="Tồn kho thành phẩm", icon="📦"),
+    st.Page("pages/tracking_nhapkho.py", title="Theo dõi nhập kho", icon="🚚"),
+    st.Page("pages/version_comparison.py", title="So sánh phiên bản", icon="🔄"),
+    st.Page("pages/forecast_vs_le.py", title="KHSX vs FC LE", icon="📈"),
+    st.Page("pages/version_history.py", title="Lịch sử phiên bản", icon="📋"),
 ]
 if user["system_role"] in ("ADMIN", "MEMBER"):
-    _pages.append(st.Page("pages/data_upload.py", title="Data Upload", icon="📤"))
-_pages.append(st.Page("pages/master_data.py", title="Master Data", icon="📁"))
-_pages.append(st.Page("pages/settings.py", title="Settings", icon="⚙️"))
+    _pages.append(st.Page("pages/data_upload.py", title="Upload dữ liệu", icon="📤"))
+_pages.append(st.Page("pages/master_data.py", title="Dữ liệu nền", icon="📁"))
+_pages.append(st.Page("pages/settings.py", title="Cài đặt", icon="⚙️"))
 
 pg = st.navigation(_pages, position="hidden")
 

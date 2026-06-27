@@ -32,11 +32,12 @@ if not versions:
 md_df = get_md_items_by_version()
 md_slicers = get_md_items_slicers()
 if not md_df.empty:
-    s1, s2, s3, s4 = st.columns([1, 1, 1, 1])
-    cat_sel = s1.multiselect("Category", md_slicers.get("category_desc", []), key="vc_cat")
-    sub_sel = s2.multiselect("Sub Category", md_slicers.get("sub_category_desc", []), key="vc_sub")
-    brand_sel = s3.multiselect("Brand", md_slicers.get("brand_desc", []), key="vc_brand")
-    brandy_sel = s4.multiselect("Brandy", md_slicers.get("brandy_desc", []), key="vc_brandy")
+    s1, s2, s3, s4, s5 = st.columns([1, 1, 1, 1, 2])
+    cat_sel = s1.multiselect("Category Desc", md_slicers.get("category_desc", []), key="vc_cat")
+    sub_sel = s2.multiselect("Sub Category Desc", md_slicers.get("sub_category_desc", []), key="vc_sub")
+    brand_sel = s3.multiselect("Brand Desc", md_slicers.get("brand_desc", []), key="vc_brand")
+    brandy_sel = s4.multiselect("Brandy Desc", md_slicers.get("brandy_desc", []), key="vc_brandy")
+    sku_sel = s5.multiselect("Standard SKU Desc", md_slicers.get("standard_sku_desc", []), key="vc_sku")
     mask = pd.Series([True] * len(md_df))
     if cat_sel:
         mask &= md_df["category_desc"].isin(cat_sel)
@@ -46,6 +47,8 @@ if not md_df.empty:
         mask &= md_df["brand_desc"].isin(brand_sel)
     if brandy_sel:
         mask &= md_df["brandy_desc"].isin(brandy_sel)
+    if sku_sel:
+        mask &= md_df["standard_sku_desc"].isin(sku_sel)
     md_allowed = md_df.loc[mask, "item_code"].dropna().unique().tolist()
 else:
     md_allowed = None

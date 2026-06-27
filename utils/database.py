@@ -531,11 +531,13 @@ def get_khsx_data_by_version(version_id: int) -> pd.DataFrame:
 @st.cache_data(ttl=3600)
 def get_version_rows(table_name: str, version_id: int, limit: Optional[int] = None) -> pd.DataFrame:
     """Lấy dữ liệu thô của 1 version (dùng cho trang Lịch sử phiên bản)"""
+    cols = get_table_columns(table_name)
+    order_by = "ORDER BY id" if "id" in cols else ""
     engine = get_engine()
     lim = f"LIMIT {limit}" if limit else ""
     with engine.connect() as conn:
-        df = _fetch_dataframe(conn, 
-            f"SELECT * FROM {table_name} WHERE version_id = :v ORDER BY id {lim}",
+        df = _fetch_dataframe(conn,
+            f"SELECT * FROM {table_name} WHERE version_id = :v {order_by} {lim}",
             {"v": version_id}
         )
     return df.drop(columns=["id"], errors="ignore")
@@ -547,6 +549,9 @@ def get_version_totals(table_name: str) -> pd.DataFrame:
     Tổng qty_1, qty_2 và số dòng theo từng version (cũ → mới).
     Dùng cho biểu đồ xu hướng phiên bản (trang Lịch sử & Dashboard).
     """
+    cols = get_table_columns(table_name)
+    qty1_expr = "SUM(qty_1) AS total_qty1" if "qty_1" in cols else "0 AS total_qty1"
+    qty2_expr = "SUM(qty_2) AS total_qty2" if "qty_2" in cols else "0 AS total_qty2"
     engine = get_engine()
     with engine.connect() as conn:
         result = conn.execute(text(f"""
@@ -554,8 +559,8 @@ def get_version_totals(table_name: str) -> pd.DataFrame:
                    MIN(uploaded_at) AS uploaded_at,
                    MIN(uploaded_by) AS uploaded_by,
                    COUNT(*)           AS row_count,
-                   SUM(qty_1)       AS total_qty1,
-                   SUM(qty_2)       AS total_qty2
+                   {qty1_expr},
+                   {qty2_expr}
             FROM {table_name}
             GROUP BY version_id
             ORDER BY version_id
@@ -596,6 +601,7 @@ def get_khsx_version_refs(version_id: int) -> dict:
 _DASHBOARD_TABLES = [
     "fc_muf", "fc_target", "fc_le_gt_ambient",
     "fc_le_mt_ambient", "fc_le_mt_chillfrozen", "khsx",
+    "inv_14", "inv_05", "inv53",
 ]
 
 
@@ -736,7 +742,7 @@ def get_md_items_by_version(version_id: Optional[int] = None) -> pd.DataFrame:
         engine = get_engine()
         with engine.connect() as conn:
             df = _fetch_dataframe(conn, (
-                "SELECT item_code, category_desc, sub_category_desc, brand_desc, brandy_desc "
+                "SELECT item_code, category_desc, sub_category_desc, brand_desc, brandy_desc, standard_sku_desc "
                 "FROM md_items WHERE version_id = :v"
             ), {"v": vid})
         return df
@@ -749,12 +755,13 @@ def get_md_items_slicers(version_id: Optional[int] = None) -> Dict[str, List[str
     """Trả về danh sách giá trị unique để dùng cho slicer từ `md_items` (mặc định: phiên bản mới nhất)."""
     df = get_md_items_by_version(version_id)
     if df.empty:
-        return {k: [] for k in ("category_desc", "sub_category_desc", "brand_desc", "brandy_desc")}
+        return {k: [] for k in ("category_desc", "sub_category_desc", "brand_desc", "brandy_desc", "standard_sku_desc")}
     return {
         "category_desc": sorted(df["category_desc"].dropna().unique().tolist()),
         "sub_category_desc": sorted(df["sub_category_desc"].dropna().unique().tolist()),
         "brand_desc": sorted(df["brand_desc"].dropna().unique().tolist()),
         "brandy_desc": sorted(df["brandy_desc"].dropna().unique().tolist()),
+        "standard_sku_desc": sorted(df["standard_sku_desc"].dropna().unique().tolist()),
     }
 
 

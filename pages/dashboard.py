@@ -15,6 +15,9 @@ TABLES = {
     "fc_le_mt_ambient":     ("FC LE MT Ambient",    "🏬"),
     "fc_le_mt_chillfrozen": ("FC LE MT ChillFrozen","❄️"),
     "khsx":                 ("KHSX (Prd Weekly)",   "🏭"),
+    "inv_14":              ("INV_14",             "🏬"),
+    "inv_05":              ("INV_05",             "🏬"),
+    "inv53":               ("INV53",              "🏬"),
 }
 CC = chart_colors()
 

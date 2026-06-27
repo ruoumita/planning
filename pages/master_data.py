@@ -14,8 +14,8 @@ if not user:
     st.stop()
 
 page_header(
-    "📁 Upload Master Data",
-    "Tất cả đều xem được phiên bản hiện hành — chỉ Admin mới upload / xóa",
+    "📁 Dữ liệu nền",
+    "Quản lý upload dữ liệu tham chiếu — chỉ ADMIN mới được upload và xóa",
 )
 
 _admin = is_admin(user)
